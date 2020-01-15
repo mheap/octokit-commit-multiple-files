@@ -17,7 +17,9 @@ In addition, it accepts `changes` which is an array of objects containing a `pat
 It also accepts a `newBranch` parameter which will commit these changes to a different branch than the one provided. You can set `overwriteBranch` to `true` to use `branch` as the base commit, or `false` to use the latest commit on `newBranch` as the base commit.
 
 ```javascript
-const Octokit = require("@octokit/rest").plugin(require("."));
+const Octokit = require("@octokit/rest").plugin(
+  require("octokit-commit-multiple-files")
+);
 const octokit = new Octokit();
 
 const branchName = await octokit.repos.createOrUpdateFiles({
