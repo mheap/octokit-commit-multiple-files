@@ -16,40 +16,43 @@ module.exports = function(octokit, opts) {
       let {
         owner,
         repo,
-        newBranch,
+        base,
         branch: branchName,
-        overwriteBranch,
+        createBranch,
         changes,
         message
       } = opts;
 
-      if (overwriteBranch && !newBranch) {
-        return reject(
-          "You can only overwrite a branch if you provide a 'newBranch'"
-        );
-      }
-
       let branchAlreadyExists = true;
-      let targetBranch = branchName;
       let baseTree;
 
       // Does the target branch already exist?
-      if (newBranch) {
-        baseTree = await loadRef(octokit, owner, repo, newBranch);
-        targetBranch = newBranch;
-        if (!baseTree) {
-          branchAlreadyExists = false;
-        }
-      }
-
-      // If it doesn't exist, or we want to replace the branch then
-      // we grab the base sha from our target branch
-      if (overwriteBranch || !baseTree) {
-        baseTree = await loadRef(octokit, owner, repo, branchName);
-        if (!baseTree) {
+      baseTree = await loadRef(octokit, owner, repo, branchName);
+      if (!baseTree) {
+        if (!createBranch) {
           return reject(
-            `Unable to load branch. '${branchName}' does not exist`
+            `The branch '${branchName}' doesn't exist and createBranch is 'false'`
           );
+        }
+
+        branchAlreadyExists = false;
+
+        // If not we use the base branch. If not provided, use the
+        // default from the repo
+        if (!base) {
+          // Work out the default branch
+          base = (
+            await octokit.repos.get({
+              owner,
+              repo
+            })
+          ).data.default_branch;
+        }
+
+        baseTree = await loadRef(octokit, owner, repo, base);
+
+        if (!baseTree) {
+          return reject(`The branch '${base}' doesn't exist`);
         }
       }
 
@@ -124,14 +127,14 @@ module.exports = function(octokit, opts) {
           owner,
           repo,
           force: true,
-          ref: `${updateRefBase}heads/${targetBranch}`,
+          ref: `${updateRefBase}heads/${branchName}`,
           sha: commit.sha
         })
       ).data;
 
       // Return the new branch name so that we can use it later
       // e.g. to create a pull request
-      return resolve(targetBranch);
+      return resolve(branchName);
     } catch (e) {
       return reject(e);
     }
@@ -147,5 +150,7 @@ async function loadRef(octokit, owner, repo, ref) {
         ref: `heads/${ref}`
       })
     ).data.object.sha;
-  } catch (e) {}
+  } catch (e) {
+    //console.log(e);
+  }
 }

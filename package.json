@@ -1,12 +1,17 @@
 {
   "name": "octokit-commit-multiple-files",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Octokit plugin to create/update multiple files at once",
   "main": "index.js",
   "scripts": {
     "test": "jest"
   },
-  "keywords": ["github", "octokit", "plugin", "commit"],
+  "keywords": [
+    "github",
+    "octokit",
+    "plugin",
+    "commit"
+  ],
   "author": "Michael Heap <m@michaelheap.com>",
   "license": "MIT",
   "devDependencies": {
@@ -15,5 +20,8 @@
     "jest": "^24.9.0",
     "prettier": "^1.19.1",
     "@octokit/rest": "^16.35.2"
+  },
+  "dependencies": {
+    "nock": "^11.7.0"
   }
 }
