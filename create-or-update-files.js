@@ -56,7 +56,6 @@ module.exports = function(octokit, opts) {
       }
 
       // Create blobs
-      const treeItems = [];
       for (let change of changes) {
         let message = change.message;
         if (!message) {
@@ -66,6 +65,7 @@ module.exports = function(octokit, opts) {
           return reject(`changes[].files is a required parameter`);
         }
 
+        const treeItems = [];
         for (let fileName in change.files) {
           let properties = change.files[fileName] || "";
 

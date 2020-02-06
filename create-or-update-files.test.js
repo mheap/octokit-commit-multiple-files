@@ -192,6 +192,37 @@ test(`success (createBranch, use default base branch)`, async () => {
   await expect(run(body)).resolves.toEqual(branch);
 });
 
+test(`success (createBranch, use default base branch, multiple commits)`, async () => {
+  const body = {
+    ...validRequest,
+    createBranch: true
+  };
+
+  body.changes.push({
+    message: "This is the second commit",
+    files: {
+      "second.md": "With some contents"
+    }
+  });
+  delete body.base;
+
+  const repoDefaultBranch = "master";
+
+  mockGetRef(branch, `sha-${branch}`, false);
+  mockGetRepo(repoDefaultBranch);
+  mockGetRef(repoDefaultBranch, `sha-${repoDefaultBranch}`, true);
+  mockCreateBlobFileOne();
+  mockCreateBlobFileTwo();
+  mockCreateBlobFileThree();
+  mockCreateTree(`sha-${repoDefaultBranch}`);
+  mockCreateTreeSecond(`ef105a72c03ce2743d90944c2977b1b5563b43c0`);
+  mockCommit(`sha-${repoDefaultBranch}`);
+  mockCommitSecond(`ef105a72c03ce2743d90944c2977b1b5563b43c0`);
+  mockCreateRef(branch, `45d77edc93556e3a997bf73d5ed4d9fb57068928`);
+
+  await expect(run(body)).resolves.toEqual(branch);
+});
+
 function mockGetRef(branch, sha, success) {
   const m = nock("https://api.github.com").get(
     `/repos/${owner}/${repo}/git/ref/heads/${branch}`
@@ -239,6 +270,13 @@ function mockCreateBlobFileTwo() {
   );
 }
 
+function mockCreateBlobFileThree() {
+  return mockCreateBlob(
+    "V2l0aCBzb21lIGNvbnRlbnRz",
+    "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b"
+  );
+}
+
 function mockCreateTree(baseTree) {
   const expectedBody = {
     tree: [
@@ -270,6 +308,31 @@ function mockCreateTree(baseTree) {
   m.reply(200, body);
 }
 
+function mockCreateTreeSecond(baseTree) {
+  const expectedBody = {
+    tree: [
+      {
+        path: "second.md",
+        sha: "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b",
+        mode: "100644",
+        type: "blob"
+      }
+    ],
+    base_tree: baseTree
+  };
+
+  const m = nock("https://api.github.com").post(
+    `/repos/${owner}/${repo}/git/trees`,
+    expectedBody
+  );
+
+  const body = {
+    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764"
+  };
+
+  m.reply(200, body);
+}
+
 function mockCommit(baseTree) {
   const expectedBody = {
     message: "Your commit message",
@@ -289,6 +352,25 @@ function mockCommit(baseTree) {
   m.reply(200, body);
 }
 
+function mockCommitSecond(baseTree) {
+  const expectedBody = {
+    message: "This is the second commit",
+    tree: "fffff6bbf5ab983d31b1cca28e204b71ab722764",
+    parents: [baseTree]
+  };
+
+  const m = nock("https://api.github.com").post(
+    `/repos/${owner}/${repo}/git/commits`,
+    expectedBody
+  );
+
+  const body = {
+    sha: "45d77edc93556e3a997bf73d5ed4d9fb57068928"
+  };
+
+  m.reply(200, body);
+}
+
 function mockUpdateRef(branch) {
   const expectedBody = {
     force: true,
@@ -303,11 +385,11 @@ function mockUpdateRef(branch) {
   m.reply(200);
 }
 
-function mockCreateRef(branch) {
+function mockCreateRef(branch, sha) {
   const expectedBody = {
     force: true,
     ref: `refs/heads/${branch}`,
-    sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0"
+    sha: sha || "ef105a72c03ce2743d90944c2977b1b5563b43c0"
   };
 
   const m = nock("https://api.github.com").post(
