@@ -15,33 +15,25 @@ const validRequest = {
   branch: "new-branch-name",
   createBranch: true,
   base: "base-branch-name",
-  message: "Your commit message",
   changes: [
     {
-      path: "test.md",
-      contents: `# This is a test
+      message: "Your commit message",
+      files: {
+        "test.md": `# This is a test
 
-I hope it works`
-    },
-    {
-      path: "test2.md",
-      contents: `Something else`
+I hope it works`,
+        "test2.md": {
+          contents: `Something else`
+        }
+      }
     }
   ]
 };
 
 // Destructuring for easier access later
-let {
-  owner,
-  repo,
-  base,
-  branch,
-  createBranch,
-  changes,
-  message
-} = validRequest;
+let { owner, repo, base, branch, createBranch, changes } = validRequest;
 
-for (let req of ["owner", "repo", "branch", "message"]) {
+for (let req of ["owner", "repo", "branch"]) {
   const body = { ...validRequest };
   delete body[req];
   test(`missing parameter (${req})`, () => {
@@ -79,35 +71,73 @@ test(`branch does not exist, provided base does not exist`, async () => {
   );
 });
 
-test(`no file contents provided (no title)`, async () => {
+test(`no commit message`, async () => {
+  const repoDefaultBranch = "master";
   mockGetRef(branch, `sha-${branch}`, true);
   mockGetRef(base, `sha-${base}`, true);
-  const body = { ...validRequest, changes: [{}] };
-  await expect(run(body)).rejects.toEqual(
-    `No file contents provided for Un-named file`
-  );
-});
+  mockGetRef(repoDefaultBranch, `sha-${repoDefaultBranch}`, true);
 
-test(`no file contents provided (with title)`, async () => {
-  mockGetRef(branch, `sha-${branch}`, true);
-  mockGetRef(base, `sha-${base}`, true);
-  const body = { ...validRequest, changes: [{ path: "test.md" }] };
-  await expect(run(body)).rejects.toEqual(
-    `No file contents provided for test.md`
-  );
-});
-
-test(`no file path provided`, async () => {
-  mockGetRef(branch, `sha-${branch}`, true);
-  mockGetRef(base, `sha-${base}`, true);
   const body = {
     ...validRequest,
     changes: [
-      { contents: "I wonder how long this text can be before it gets cut off" }
+      {
+        files: {
+          "test.md": null
+        }
+      }
     ]
   };
   await expect(run(body)).rejects.toEqual(
-    `No file path provided for the following contents: I wonder how long this text ca...`
+    `changes[].message is a required parameter`
+  );
+});
+
+test(`no files provided (empty object)`, async () => {
+  const repoDefaultBranch = "master";
+  mockGetRef(branch, `sha-${branch}`, true);
+  mockGetRef(base, `sha-${base}`, true);
+  mockGetRef(repoDefaultBranch, `sha-${repoDefaultBranch}`, true);
+
+  const body = {
+    ...validRequest,
+    changes: [{ message: "Test Commit", files: {} }]
+  };
+  await expect(run(body)).rejects.toEqual(
+    `changes[].files is a required parameter`
+  );
+});
+
+test(`no files provided (missing object)`, async () => {
+  const repoDefaultBranch = "master";
+  mockGetRef(branch, `sha-${branch}`, true);
+  mockGetRef(base, `sha-${base}`, true);
+  mockGetRef(repoDefaultBranch, `sha-${repoDefaultBranch}`, true);
+
+  const body = { ...validRequest, changes: [{ message: "Test Commit" }] };
+  await expect(run(body)).rejects.toEqual(
+    `changes[].files is a required parameter`
+  );
+});
+
+test(`no file contents provided`, async () => {
+  const repoDefaultBranch = "master";
+  mockGetRef(branch, `sha-${branch}`, true);
+  mockGetRef(base, `sha-${base}`, true);
+  mockGetRef(repoDefaultBranch, `sha-${repoDefaultBranch}`, true);
+
+  const body = {
+    ...validRequest,
+    changes: [
+      {
+        message: "This is a test",
+        files: {
+          "test.md": null
+        }
+      }
+    ]
+  };
+  await expect(run(body)).rejects.toEqual(
+    `No file contents provided for test.md`
   );
 });
 
