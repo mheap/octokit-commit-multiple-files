@@ -71,25 +71,32 @@ module.exports = function(octokit, opts) {
 
           let contents = properties.contents || properties;
           let mode = properties.mode || "100644";
+          let type = properties.type || "blob";
 
           if (!contents) {
             return reject(`No file contents provided for ${fileName}`);
           }
 
-          let file = (
-            await octokit.git.createBlob({
-              owner,
-              repo,
-              content: Buffer.from(contents).toString("base64"),
-              encoding: "base64"
-            })
-          ).data;
+          let fileSha;
+          if (type == "commit") {
+            fileSha = contents;
+          } else {
+            let file = (
+              await octokit.git.createBlob({
+                owner,
+                repo,
+                content: Buffer.from(contents).toString("base64"),
+                encoding: "base64"
+              })
+            ).data;
+            fileSha = file.sha;
+          }
 
           treeItems.push({
             path: fileName,
-            sha: file.sha,
+            sha: fileSha,
             mode: mode,
-            type: "blob"
+            type: type
           });
         }
 

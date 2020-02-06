@@ -141,6 +141,31 @@ test(`no file contents provided`, async () => {
   );
 });
 
+test(`success (submodule, branch exists)`, async () => {
+  const body = {
+    ...validRequest,
+    changes: [
+      {
+        message: "Your submodule commit message",
+        files: {
+          my_submodule: {
+            contents: "new-submodule-sha",
+            mode: "160000",
+            type: "commit"
+          }
+        }
+      }
+    ]
+  };
+
+  mockGetRef(branch, `sha-${branch}`, true);
+  mockCreateTreeSubmodule(`sha-${branch}`);
+  mockCommitSubmodule(`sha-${branch}`);
+  mockUpdateRef(branch);
+
+  await expect(run(body)).resolves.toEqual(branch);
+});
+
 test(`success (branch exists)`, async () => {
   const body = {
     ...validRequest
@@ -277,6 +302,31 @@ function mockCreateBlobFileThree() {
   );
 }
 
+function mockCreateTreeSubmodule(baseTree) {
+  const expectedBody = {
+    tree: [
+      {
+        path: "my_submodule",
+        sha: "new-submodule-sha",
+        mode: "160000",
+        type: "commit"
+      }
+    ],
+    base_tree: baseTree
+  };
+
+  const m = nock("https://api.github.com").post(
+    `/repos/${owner}/${repo}/git/trees`,
+    expectedBody
+  );
+
+  const body = {
+    sha: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9"
+  };
+
+  m.reply(200, body);
+}
+
 function mockCreateTree(baseTree) {
   const expectedBody = {
     tree: [
@@ -328,6 +378,25 @@ function mockCreateTreeSecond(baseTree) {
 
   const body = {
     sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764"
+  };
+
+  m.reply(200, body);
+}
+
+function mockCommitSubmodule(baseTree) {
+  const expectedBody = {
+    message: "Your submodule commit message",
+    tree: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9",
+    parents: [baseTree]
+  };
+
+  const m = nock("https://api.github.com").post(
+    `/repos/${owner}/${repo}/git/commits`,
+    expectedBody
+  );
+
+  const body = {
+    sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0"
   };
 
   m.reply(200, body);
