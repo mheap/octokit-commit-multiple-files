@@ -17,9 +17,9 @@ If the `branch` provided does not exist, the plugin will error. To automatically
 In addition, it accepts `changes` which is an array of objects containing a `message` and a `files` object
 
 ```javascript
-const Octokit = require("@octokit/rest").plugin(
-  require("octokit-commit-multiple-files")
-);
+let { Octokit } = require("@octokit/rest");
+Octokit = Octokit.plugin(require("octokit-commit-multiple-files"));
+
 const octokit = new Octokit();
 
 const branchName = await octokit.repos.createOrUpdateFiles({
@@ -35,18 +35,18 @@ const branchName = await octokit.repos.createOrUpdateFiles({
 
 I hope it works`,
         "test2.md": {
-          contents: `Something else`
-        }
-      }
+          contents: `Something else`,
+        },
+      },
     },
     {
-      "message": "This is a separate commit",
-      "files": {
-        "second.md": "Where should we go today?"
-      }
-    }
-  ]
-})
+      message: "This is a separate commit",
+      files: {
+        "second.md": "Where should we go today?",
+      },
+    },
+  ],
+});
 ```
 
 In addition, you can set the `mode` of a file change. For example, if you wanted to update a submodule pointer:
