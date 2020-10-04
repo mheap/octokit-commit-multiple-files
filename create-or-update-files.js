@@ -88,13 +88,15 @@ module.exports = function (octokit, opts) {
           });
         }
 
-        for (const fileName of change.filesToDelete) {
-          treeItems.push({
-            path: fileName,
-            sha: null, // sha as null implies that the file should be deleted
-            mode: "100644",
-            type: "commit"
-          });
+        if (Array.isArray(change.filesToDelete)) {
+          for (const fileName of change.filesToDelete) {
+            treeItems.push({
+              path: fileName,
+              sha: null, // sha as null implies that the file should be deleted
+              mode: "100644",
+              type: "commit"
+            });
+          }
         }
 
         // Add those blobs to a tree
