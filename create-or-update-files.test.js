@@ -239,6 +239,7 @@ test(`success (createBranch, use default base branch, multiple commits)`, async 
   mockCreateBlobFileOne();
   mockCreateBlobFileTwo();
   mockCreateBlobFileThree();
+  mockCreateBlobFileFour();
   mockCreateTree(`sha-${repoDefaultBranch}`);
   mockCreateTreeSecond(`ef105a72c03ce2743d90944c2977b1b5563b43c0`);
   mockCommit(`sha-${repoDefaultBranch}`);
@@ -247,6 +248,64 @@ test(`success (createBranch, use default base branch, multiple commits)`, async 
 
   await expect(run(body)).resolves.toEqual(branch);
 });
+
+test('success (branch exists - discard deletions and retry on failure) - file deletions and updates', async () => {
+  mockGetRef(branch, `sha-${branch}`, false);
+  mockGetRef(base, `sha-${base}`, true);
+  mockCreateBlobFileTwo();
+  mockCreateBlobFileThree();
+  mockCreateBlobFileFour();
+  mockCreateTree(`sha-${base}`);
+  mockCreateTreeWithDelete(`sha-${base}`);
+  mockCommitSecond(`sha-${base}`);
+  mockCreateRefSecond(branch);
+
+  const changes = [{
+    message: "This is the second commit",
+    filesToDelete: ['wow-this-file-disappeared'],
+    retryOnDeleteFailure: true,
+    files: {
+      'wow-this-file-didnt': {
+        contents: 'hi',
+      }
+    }
+  }];
+
+  const body = {
+    ...validRequest,
+    changes,
+  }
+
+  await expect(run(body)).resolves.toEqual(branch);
+})
+
+test('success (branch exists - throw and return on failure) - file deletions and updates', async () => {
+  mockGetRef(branch, `sha-${branch}`, false);
+  mockGetRef(base, `sha-${base}`, true);
+  mockCreateBlobFileTwo();
+  mockCreateBlobFileThree();
+  mockCreateTree(`sha-${base}`);
+  mockCommit(`sha-${base}`);
+  mockCreateRef(branch);
+
+  const changes = [{
+    message: "Hello there",
+    filesToDelete: ['wow-this-file-disappeared'],
+    retryOnDeleteFailure: false,
+    files: {
+      'wow-this-file-didnt': {
+        contents: 'hi',
+      }
+    }
+  }];
+
+  const body = {
+    ...validRequest,
+    changes,
+  }
+
+  await expect(run(body)).rejects.toEqual('At least one file set for deletion could not be found in repo');
+})
 
 function mockGetRef(branch, sha, success) {
   const m = nock("https://api.github.com").get(
@@ -298,6 +357,13 @@ function mockCreateBlobFileTwo() {
 function mockCreateBlobFileThree() {
   return mockCreateBlob(
     "V2l0aCBzb21lIGNvbnRlbnRz",
+    "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b"
+  );
+}
+
+function mockCreateBlobFileFour() {
+  return mockCreateBlob(
+    "aGk=",
     "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b"
   );
 }
@@ -372,6 +438,36 @@ function mockCreateTreeSecond(baseTree) {
   };
 
   const m = nock("https://api.github.com").post(
+    `/repos/${owner}/${repo}/git/trees`,
+    expectedBody
+  );
+
+  const body = {
+    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764"
+  };
+
+  m.reply(200, body);
+}
+
+function mockCreateTreeWithDelete(baseTree) {
+  const expectedBody = {
+    tree: [
+      {
+        path: "wow-this-file-didnt",
+        sha: "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b",
+        mode: "100644",
+        type: "blob"
+      }
+    ],
+    base_tree: baseTree
+  };
+
+  const m = nock("https://api.github.com").post(
+    `/repos/${owner}/${repo}/git/trees`,
+    expectedBody
+  );
+
+  const m2 = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/trees`,
     expectedBody
   );
@@ -459,6 +555,21 @@ function mockCreateRef(branch, sha) {
     force: true,
     ref: `refs/heads/${branch}`,
     sha: sha || "ef105a72c03ce2743d90944c2977b1b5563b43c0"
+  };
+
+  const m = nock("https://api.github.com").post(
+    `/repos/${owner}/${repo}/git/refs`,
+    expectedBody
+  );
+
+  m.reply(200);
+}
+
+function mockCreateRefSecond(branch, sha) {
+  const expectedBody = {
+    force: true,
+    ref: `refs/heads/${branch}`,
+    sha: sha || "45d77edc93556e3a997bf73d5ed4d9fb57068928"
   };
 
   const m = nock("https://api.github.com").post(
