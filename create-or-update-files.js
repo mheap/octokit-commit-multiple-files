@@ -62,7 +62,7 @@ module.exports = function (octokit, opts) {
           return reject(`changes[].message is a required parameter`);
         }
 
-        if ((!change.files || Object.keys(change.files).length === 0) && change.filesToDelete.length === 0) {
+        if ((!change.files || Object.keys(change.files).length === 0) && (!change.filesToDelete || change.filesToDelete.length === 0)) {
           return reject(`either changes[].files or changes[].filesToDelete are required`);
         }
 
@@ -194,7 +194,6 @@ async function loadRef(octokit, owner, repo, ref) {
       repo,
       ref: `heads/${ref}`
     })
-    console.log(x);
     return x.data.object.sha
   } catch (e) {
     // console.log(e);

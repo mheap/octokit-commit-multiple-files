@@ -103,7 +103,7 @@ test(`no files provided (empty object)`, async () => {
     changes: [{ message: "Test Commit", files: {} }]
   };
   await expect(run(body)).rejects.toEqual(
-    `changes[].files is a required parameter`
+    `either changes[].files or changes[].filesToDelete are required`
   );
 });
 
@@ -115,7 +115,7 @@ test(`no files provided (missing object)`, async () => {
 
   const body = { ...validRequest, changes: [{ message: "Test Commit" }] };
   await expect(run(body)).rejects.toEqual(
-    `changes[].files is a required parameter`
+    `either changes[].files or changes[].filesToDelete are required`
   );
 });
 
