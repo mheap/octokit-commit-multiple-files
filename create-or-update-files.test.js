@@ -1,5 +1,5 @@
 const plugin = require("./create-or-update-files");
-const Octokit = require("@octokit/rest");
+const { Octokit } = require("@octokit/rest");
 
 const nock = require("nock");
 nock.disableNetConnect();
@@ -250,7 +250,7 @@ test(`success (createBranch, use default base branch, multiple commits)`, async 
 
 function mockGetRef(branch, sha, success) {
   const m = nock("https://api.github.com").get(
-    `/repos/${owner}/${repo}/git/ref/heads/${branch}`
+    `/repos/${owner}/${repo}/git/ref/heads%2F${branch}`
   );
 
   const body = {
@@ -447,7 +447,7 @@ function mockUpdateRef(branch) {
   };
 
   const m = nock("https://api.github.com").patch(
-    `/repos/${owner}/${repo}/git/refs/heads/${branch}`,
+    `/repos/${owner}/${repo}/git/refs/heads%2F${branch}`,
     expectedBody
   );
 
