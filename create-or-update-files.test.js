@@ -31,7 +31,7 @@ I hope it works`,
 };
 
 // Destructuring for easier access later
-let { owner, repo, base, branch, createBranch, changes } = validRequest;
+let { owner, repo, base, branch } = validRequest;
 
 for (let req of ["owner", "repo", "branch"]) {
   const body = { ...validRequest };
@@ -263,7 +263,7 @@ test('success (branch exists - discard deletions and retry on failure) - file de
   const changes = [{
     message: "This is the second commit",
     filesToDelete: ['wow-this-file-disappeared'],
-    retryOnDeleteFailure: true,
+    ignoreDeletionFailures: true,
     files: {
       'wow-this-file-didnt': {
         contents: 'hi',
@@ -291,7 +291,7 @@ test('success (branch exists - throw and return on failure) - file deletions and
   const changes = [{
     message: "Hello there",
     filesToDelete: ['wow-this-file-disappeared'],
-    retryOnDeleteFailure: false,
+    ignoreDeletionFailures: false,
     files: {
       'wow-this-file-didnt': {
         contents: 'hi',
@@ -467,11 +467,6 @@ function mockCreateTreeWithDelete(baseTree) {
     expectedBody
   );
 
-  const m2 = nock("https://api.github.com").post(
-    `/repos/${owner}/${repo}/git/trees`,
-    expectedBody
-  );
-
   const body = {
     sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764"
   };
@@ -580,7 +575,7 @@ function mockCreateRefSecond(branch, sha) {
   m.reply(200);
 }
 
-function mockGetRepo(defaultBranch) {
+function mockGetRepo() {
   const body = {
     default_branch: "master"
   };

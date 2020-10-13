@@ -88,31 +88,17 @@ module.exports = function (octokit, opts) {
           });
         }
 
-        if (Array.isArray(change.filesToDelete)) {
-          for (const fileName of change.filesToDelete) {
-            treeItems.push({
-              path: fileName,
-              sha: null, // sha as null implies that the file should be deleted
-              mode: "100644",
-              type: "commit"
-            });
-          }
+        if (Array.isArray(change.filesToDelete) && change.filesToDelete.length > 0) {
+          await handleFilesToDelete(octokit, change, owner, repo, branchName, reject, treeItems);
+        }
+
+        // no need to issue farther requests if there are no updates, creations and deletions
+        if (treeItems.length === 0) {
+          continue;
         }
 
         // Add those blobs to a tree
-        let tree;
-        try {
-          tree = await createTree(octokit, owner, repo, treeItems, baseTree);
-        } catch (e) {
-          const retryFlag = change.retryOnDeleteFailure || false;
-          // discard deletions if one of the files could not be found
-          if (retryFlag) {
-            change.filesToDelete.forEach(() => treeItems.pop());
-            tree = await createTree(octokit, owner, repo, treeItems, baseTree);
-          } else {
-            return reject('At least one file set for deletion could not be found in repo');
-          }
-        }
+        const tree = await createTree(octokit, owner, repo, treeItems, baseTree);
 
         // Create a commit that points to that tree
         const commit = await createCommit(octokit, owner, repo, message, tree, baseTree);
@@ -147,6 +133,43 @@ module.exports = function (octokit, opts) {
     }
   });
 };
+
+async function handleFilesToDelete(octokit, change, owner, repo, branch, reject, treeItems) {
+  const filesToResolve = [];
+  for (const fileName of change.filesToDelete) {
+    filesToResolve.push(fileExistsInRepo(octokit, owner, repo, fileName, branch));
+  }
+  const resolvedFiles = await Promise.allSettled(filesToResolve);
+
+  const existingFiles = resolvedFiles.filter(resolvedFile => resolvedFile.value);
+  if (existingFiles.length < change.filesToDelete.length && !change.ignoreDeletionFailures) {
+    return reject('At least one file set for deletion could not be found in repo');
+  }
+
+  existingFiles.forEach(file => {
+    treeItems.push({
+      path: file.value,
+      sha: null, // sha as null implies that the file should be deleted
+      mode: "100644",
+      type: "commit"
+    });
+  });
+}
+
+async function fileExistsInRepo(octokit, owner, repo, path, branch) {
+  try {
+    await octokit.repos.getContents({
+      method: 'HEAD',
+      owner,
+      repo,
+      path,
+      ref: branch,
+    });
+    return path;
+  } catch (e) {
+    return null;
+  }
+}
 
 async function createCommit(octokit, owner, repo, message, tree, baseTree) {
   return (
