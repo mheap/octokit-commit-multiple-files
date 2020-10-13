@@ -88,12 +88,13 @@ module.exports = function (octokit, opts) {
           });
         }
 
+        let filesCheckStatus;
         if (Array.isArray(change.filesToDelete) && change.filesToDelete.length > 0) {
-          await handleFilesToDelete(octokit, change, owner, repo, branchName, reject, treeItems);
+          filesCheckStatus = await handleFilesToDelete(octokit, change, owner, repo, branchName, reject, treeItems);
         }
 
         // no need to issue farther requests if there are no updates, creations and deletions
-        if (treeItems.length === 0) {
+        if (treeItems.length === 0 || filesCheckStatus === 'error') {
           continue;
         }
 
@@ -143,7 +144,9 @@ async function handleFilesToDelete(octokit, change, owner, repo, branch, reject,
 
   const existingFiles = resolvedFiles.filter(resolvedFile => resolvedFile.value);
   if (existingFiles.length < change.filesToDelete.length && !change.ignoreDeletionFailures) {
-    return reject('At least one file set for deletion could not be found in repo');
+    // new treeItems are not pushed in this case
+    reject('At least one file set for deletion could not be found in repo');
+    return 'error';
   }
 
   existingFiles.forEach(file => {
