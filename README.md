@@ -63,3 +63,25 @@ In addition, you can set the `mode` of a file change. For example, if you wanted
   }
 }
 ```
+
+In addition, you can set the `filesToDelete` property as an array of strings (file paths) to set files for deletion in a single commit (works with updates and creations).
+
+```javascript
+{
+  "message": "This commit removes files",
+  "filesToDelete": ['path/to/my/file.txt', 'path/to/another.js'],
+}
+```
+
+- Note that the `ignoreDeletionFailures` property is set to false by default (works in a context of a single change).
+- If `ignoreDeletionFailures` is set to false, an error will be thrown if any file set for deletion is missing and the commits will stop processing. Any commits made before this will still be applied. Any changes in this `change` will not be committed. No future changes will be applied.
+- If `ignoreDeletionFailures` is set to true, missing files that are set for deletion will be ignored.
+- If a file is created and deleted in the same `change`, the file will be created/updated
+
+```javascript
+{
+  "message": "This commit removes files",
+  "filesToDelete": ['path/to/my/file.txt', 'path/to/another.js'],
+  "ignoreDeletionFailures": true,
+}
+```
