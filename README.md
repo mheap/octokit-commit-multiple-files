@@ -68,7 +68,7 @@ In addition, you can set the `filesToDelete` property as an array of strings (fi
 
 ```javascript
 {
-  "message": "This is a submodule commit",
+  "message": "This commit removes files",
   "filesToDelete": ['path/to/my/file.txt', 'path/to/another.js'],
 }
 ```
@@ -80,7 +80,7 @@ In addition, you can set the `filesToDelete` property as an array of strings (fi
 
 ```javascript
 {
-  "message": "This is a submodule commit",
+  "message": "This commit removes files",
   "filesToDelete": ['path/to/my/file.txt', 'path/to/another.js'],
   "ignoreDeletionFailures": true,
 }
