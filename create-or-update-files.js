@@ -1,4 +1,4 @@
-module.exports = function (octokit, opts) {
+module.exports = function(octokit, opts) {
   return new Promise(async (resolve, reject) => {
     // Up front validation
     try {
@@ -19,7 +19,7 @@ module.exports = function (octokit, opts) {
         base,
         branch: branchName,
         createBranch,
-        changes,
+        changes
       } = opts;
 
       let branchAlreadyExists = true;
@@ -43,7 +43,7 @@ module.exports = function (octokit, opts) {
           base = (
             await octokit.repos.get({
               owner,
-              repo,
+              repo
             })
           ).data.default_branch;
         }
@@ -100,7 +100,7 @@ module.exports = function (octokit, opts) {
                 path: fileName,
                 sha: null, // sha as null implies that the file should be deleted
                 mode: "100644",
-                type: "commit",
+                type: "commit"
               });
             }
           }
@@ -129,7 +129,7 @@ module.exports = function (octokit, opts) {
             path: fileName,
             sha: fileSha,
             mode: mode,
-            type: type,
+            type: type
           });
         }
 
@@ -176,7 +176,7 @@ module.exports = function (octokit, opts) {
         repo,
         force: true,
         ref: `${updateRefBase}heads/${branchName}`,
-        sha: baseTree,
+        sha: baseTree
       });
 
       // Return the new branch name so that we can use it later
@@ -195,7 +195,7 @@ async function fileExistsInRepo(octokit, owner, repo, path, branch) {
       owner,
       repo,
       path,
-      ref: branch,
+      ref: branch
     });
     return true;
   } catch (e) {
@@ -210,7 +210,7 @@ async function createCommit(octokit, owner, repo, message, tree, baseTree) {
       repo,
       message,
       tree: tree.sha,
-      parents: [baseTree],
+      parents: [baseTree]
     })
   ).data;
 }
@@ -221,7 +221,7 @@ async function createTree(octokit, owner, repo, treeItems, baseTree) {
       owner,
       repo,
       tree: treeItems,
-      base_tree: baseTree,
+      base_tree: baseTree
     })
   ).data;
 }
@@ -235,7 +235,7 @@ async function createBlob(octokit, owner, repo, contents, type) {
         owner,
         repo,
         content: Buffer.from(contents).toString("base64"),
-        encoding: "base64",
+        encoding: "base64"
       })
     ).data;
     return file.sha;
@@ -247,7 +247,7 @@ async function loadRef(octokit, owner, repo, ref) {
     const x = await octokit.git.getRef({
       owner,
       repo,
-      ref: `heads/${ref}`,
+      ref: `heads/${ref}`
     });
     return x.data.object.sha;
   } catch (e) {
