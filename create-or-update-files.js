@@ -1,4 +1,4 @@
-module.exports = function (octokit, opts) {
+module.exports = function(octokit, opts) {
   return new Promise(async (resolve, reject) => {
     // Up front validation
     try {
@@ -19,7 +19,7 @@ module.exports = function (octokit, opts) {
         base,
         branch: branchName,
         createBranch,
-        changes
+        changes,
       } = opts;
 
       let branchAlreadyExists = true;
@@ -43,7 +43,7 @@ module.exports = function (octokit, opts) {
           base = (
             await octokit.repos.get({
               owner,
-              repo
+              repo,
             })
           ).data.default_branch;
         }
@@ -62,8 +62,16 @@ module.exports = function (octokit, opts) {
           return reject(`changes[].message is a required parameter`);
         }
 
-        if ((!change.files || Object.keys(change.files).length === 0) && (!change.filesToDelete || change.filesToDelete.length === 0)) {
-          return reject(`either changes[].files or changes[].filesToDelete are required`);
+        const hasFiles = change.files && Object.keys(change.files).length > 0;
+
+        const hasFilesToDelete =
+          Array.isArray(change.filesToDelete) &&
+          change.filesToDelete.length > 0;
+
+        if (!hasFiles && !hasFilesToDelete) {
+          return reject(
+            `either changes[].files or changes[].filesToDelete are required`
+          );
         }
 
         const treeItems = [];
@@ -78,31 +86,76 @@ module.exports = function (octokit, opts) {
             return reject(`No file contents provided for ${fileName}`);
           }
 
-          const fileSha = await createBlob(octokit, owner, repo, contents, type);
+          const fileSha = await createBlob(
+            octokit,
+            owner,
+            repo,
+            contents,
+            type
+          );
 
           treeItems.push({
             path: fileName,
             sha: fileSha,
             mode: mode,
-            type: type
+            type: type,
           });
         }
 
-        let filesCheckStatus;
-        if (Array.isArray(change.filesToDelete) && change.filesToDelete.length > 0) {
-          filesCheckStatus = await handleFilesToDelete(octokit, change, owner, repo, branchName, reject, treeItems);
+        // Handle file deletions
+        if (hasFilesToDelete) {
+          for (const fileName of change.filesToDelete) {
+            const exists = await fileExistsInRepo(
+              octokit,
+              owner,
+              repo,
+              fileName,
+              branchName
+            );
+
+            // If it doesn't exist, and we're not ignoring missing files
+            // reject the promise
+            if (!exists && !change.ignoreDeletionFailures) {
+              return reject(
+                `The file ${fileName} could not be found in the repo`
+              );
+            }
+
+            // At this point it either exists, or we're ignoring failures
+            if (exists) {
+              treeItems.push({
+                path: fileName,
+                sha: null, // sha as null implies that the file should be deleted
+                mode: "100644",
+                type: "commit",
+              });
+            }
+          }
         }
 
         // no need to issue farther requests if there are no updates, creations and deletions
-        if (treeItems.length === 0 || filesCheckStatus === 'error') {
+        if (treeItems.length === 0) {
           continue;
         }
 
         // Add those blobs to a tree
-        const tree = await createTree(octokit, owner, repo, treeItems, baseTree);
+        const tree = await createTree(
+          octokit,
+          owner,
+          repo,
+          treeItems,
+          baseTree
+        );
 
         // Create a commit that points to that tree
-        const commit = await createCommit(octokit, owner, repo, message, tree, baseTree);
+        const commit = await createCommit(
+          octokit,
+          owner,
+          repo,
+          message,
+          tree,
+          baseTree
+        );
 
         // Update the base tree if we have another commit to make
         baseTree = commit.sha;
@@ -123,7 +176,7 @@ module.exports = function (octokit, opts) {
         repo,
         force: true,
         ref: `${updateRefBase}heads/${branchName}`,
-        sha: baseTree
+        sha: baseTree,
       });
 
       // Return the new branch name so that we can use it later
@@ -135,34 +188,10 @@ module.exports = function (octokit, opts) {
   });
 };
 
-async function handleFilesToDelete(octokit, change, owner, repo, branch, reject, treeItems) {
-  const filesToResolve = [];
-  for (const fileName of change.filesToDelete) {
-    filesToResolve.push(fileExistsInRepo(octokit, owner, repo, fileName, branch));
-  }
-  const resolvedFiles = await Promise.allSettled(filesToResolve);
-
-  const existingFiles = resolvedFiles.filter(resolvedFile => resolvedFile.value);
-  if (existingFiles.length < change.filesToDelete.length && !change.ignoreDeletionFailures) {
-    // new treeItems are not pushed in this case
-    reject('At least one file set for deletion could not be found in repo');
-    return 'error';
-  }
-
-  existingFiles.forEach(file => {
-    treeItems.push({
-      path: file.value,
-      sha: null, // sha as null implies that the file should be deleted
-      mode: "100644",
-      type: "commit"
-    });
-  });
-}
-
 async function fileExistsInRepo(octokit, owner, repo, path, branch) {
   try {
     await octokit.repos.getContents({
-      method: 'HEAD',
+      method: "HEAD",
       owner,
       repo,
       path,
@@ -170,7 +199,7 @@ async function fileExistsInRepo(octokit, owner, repo, path, branch) {
     });
     return path;
   } catch (e) {
-    return null;
+    return false;
   }
 }
 
@@ -181,7 +210,7 @@ async function createCommit(octokit, owner, repo, message, tree, baseTree) {
       repo,
       message,
       tree: tree.sha,
-      parents: [baseTree]
+      parents: [baseTree],
     })
   ).data;
 }
@@ -192,7 +221,7 @@ async function createTree(octokit, owner, repo, treeItems, baseTree) {
       owner,
       repo,
       tree: treeItems,
-      base_tree: baseTree
+      base_tree: baseTree,
     })
   ).data;
 }
@@ -206,7 +235,7 @@ async function createBlob(octokit, owner, repo, contents, type) {
         owner,
         repo,
         content: Buffer.from(contents).toString("base64"),
-        encoding: "base64"
+        encoding: "base64",
       })
     ).data;
     return file.sha;
@@ -218,9 +247,9 @@ async function loadRef(octokit, owner, repo, ref) {
     const x = await octokit.git.getRef({
       owner,
       repo,
-      ref: `heads/${ref}`
-    })
-    return x.data.object.sha
+      ref: `heads/${ref}`,
+    });
+    return x.data.object.sha;
   } catch (e) {
     // console.log(e);
   }
