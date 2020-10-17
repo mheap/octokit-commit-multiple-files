@@ -23,11 +23,11 @@ const validRequest = {
 
 I hope it works`,
         "test2.md": {
-          contents: `Something else`,
-        },
-      },
-    },
-  ],
+          contents: `Something else`
+        }
+      }
+    }
+  ]
 };
 
 // Destructuring for easier access later
@@ -82,10 +82,10 @@ test(`no commit message`, async () => {
     changes: [
       {
         files: {
-          "test.md": null,
-        },
-      },
-    ],
+          "test.md": null
+        }
+      }
+    ]
   };
   await expect(run(body)).rejects.toEqual(
     `changes[].message is a required parameter`
@@ -100,7 +100,7 @@ test(`no files provided (empty object)`, async () => {
 
   const body = {
     ...validRequest,
-    changes: [{ message: "Test Commit", files: {} }],
+    changes: [{ message: "Test Commit", files: {} }]
   };
   await expect(run(body)).rejects.toEqual(
     `either changes[].files or changes[].filesToDelete are required`
@@ -131,10 +131,10 @@ test(`no file contents provided`, async () => {
       {
         message: "This is a test",
         files: {
-          "test.md": null,
-        },
-      },
-    ],
+          "test.md": null
+        }
+      }
+    ]
   };
   await expect(run(body)).rejects.toEqual(
     `No file contents provided for test.md`
@@ -151,11 +151,11 @@ test(`success (submodule, branch exists)`, async () => {
           my_submodule: {
             contents: "new-submodule-sha",
             mode: "160000",
-            type: "commit",
-          },
-        },
-      },
-    ],
+            type: "commit"
+          }
+        }
+      }
+    ]
   };
 
   mockGetRef(branch, `sha-${branch}`, true);
@@ -168,7 +168,7 @@ test(`success (submodule, branch exists)`, async () => {
 
 test(`success (branch exists)`, async () => {
   const body = {
-    ...validRequest,
+    ...validRequest
   };
   mockGetRef(branch, `sha-${branch}`, true);
   mockCreateBlobFileOne();
@@ -183,7 +183,7 @@ test(`success (branch exists)`, async () => {
 test(`success (createBranch, base provided)`, async () => {
   const body = {
     ...validRequest,
-    createBranch: true,
+    createBranch: true
   };
   mockGetRef(branch, `sha-${branch}`, false);
   mockGetRef(base, `sha-${base}`, true);
@@ -199,7 +199,7 @@ test(`success (createBranch, base provided)`, async () => {
 test(`success (createBranch, use default base branch)`, async () => {
   const body = {
     ...validRequest,
-    createBranch: true,
+    createBranch: true
   };
   delete body.base;
 
@@ -220,14 +220,14 @@ test(`success (createBranch, use default base branch)`, async () => {
 test(`success (createBranch, use default base branch, multiple commits)`, async () => {
   const body = {
     ...validRequest,
-    createBranch: true,
+    createBranch: true
   };
 
   body.changes.push({
     message: "This is the second commit",
     files: {
-      "second.md": "With some contents",
-    },
+      "second.md": "With some contents"
+    }
   });
   delete body.base;
 
@@ -268,15 +268,15 @@ test("success (ignore missing deleted files)", async () => {
       ignoreDeletionFailures: true,
       files: {
         "wow-this-file-was-created": {
-          contents: "hi",
-        },
-      },
-    },
+          contents: "hi"
+        }
+      }
+    }
   ];
 
   const body = {
     ...validRequest,
-    changes,
+    changes
   };
 
   await expect(run(body)).resolves.toEqual(branch);
@@ -299,15 +299,15 @@ test("success (fileToDelete exists)", async () => {
       filesToDelete: ["wow-this-file-disappeared"],
       files: {
         "wow-this-file-was-created": {
-          contents: "hi",
-        },
-      },
-    },
+          contents: "hi"
+        }
+      }
+    }
   ];
 
   const body = {
     ...validRequest,
-    changes,
+    changes
   };
 
   await expect(run(body)).resolves.toEqual(branch);
@@ -330,15 +330,15 @@ test("failure (fileToDelete is missing)", async () => {
       ignoreDeletionFailures: false,
       files: {
         "wow-this-file-was-created": {
-          contents: "hi",
-        },
-      },
-    },
+          contents: "hi"
+        }
+      }
+    }
   ];
 
   const body = {
     ...validRequest,
-    changes,
+    changes
   };
 
   await expect(run(body)).rejects.toEqual(
@@ -353,8 +353,8 @@ function mockGetRef(branch, sha, success) {
 
   const body = {
     object: {
-      sha: sha,
-    },
+      sha: sha
+    }
   };
 
   if (success) {
@@ -373,7 +373,7 @@ function mockCreateBlob(content, sha) {
 
   const body = {
     sha: sha,
-    url: `https://api.github.com/repos/mheap/action-test/git/blobs/${sha}`,
+    url: `https://api.github.com/repos/mheap/action-test/git/blobs/${sha}`
   };
 
   m.reply(200, body);
@@ -411,10 +411,10 @@ function mockCreateTreeSubmodule(baseTree) {
         path: "my_submodule",
         sha: "new-submodule-sha",
         mode: "160000",
-        type: "commit",
-      },
+        type: "commit"
+      }
     ],
-    base_tree: baseTree,
+    base_tree: baseTree
   };
 
   const m = nock("https://api.github.com").post(
@@ -423,7 +423,7 @@ function mockCreateTreeSubmodule(baseTree) {
   );
 
   const body = {
-    sha: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9",
+    sha: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9"
   };
 
   m.reply(200, body);
@@ -436,16 +436,16 @@ function mockCreateTree(baseTree) {
         path: "test.md",
         sha: "afb296bb7f3e327767bdda481c4877ba4a09e02e",
         mode: "100644",
-        type: "blob",
+        type: "blob"
       },
       {
         path: "test2.md",
         sha: "a71ee6d9405fed4f6fd181c61ceb40ef10905d30",
         mode: "100644",
-        type: "blob",
-      },
+        type: "blob"
+      }
     ],
-    base_tree: baseTree,
+    base_tree: baseTree
   };
 
   const m = nock("https://api.github.com").post(
@@ -454,7 +454,7 @@ function mockCreateTree(baseTree) {
   );
 
   const body = {
-    sha: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9",
+    sha: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9"
   };
 
   m.reply(200, body);
@@ -467,10 +467,10 @@ function mockCreateTreeSecond(baseTree) {
         path: "second.md",
         sha: "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b",
         mode: "100644",
-        type: "blob",
-      },
+        type: "blob"
+      }
     ],
-    base_tree: baseTree,
+    base_tree: baseTree
   };
 
   const m = nock("https://api.github.com").post(
@@ -479,7 +479,7 @@ function mockCreateTreeSecond(baseTree) {
   );
 
   const body = {
-    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764",
+    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764"
   };
 
   m.reply(200, body);
@@ -492,10 +492,10 @@ function mockCreateTreeWithIgnoredDelete(baseTree) {
         path: "wow-this-file-was-created",
         sha: "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b",
         mode: "100644",
-        type: "blob",
-      },
+        type: "blob"
+      }
     ],
-    base_tree: baseTree,
+    base_tree: baseTree
   };
 
   const m = nock("https://api.github.com").post(
@@ -504,7 +504,7 @@ function mockCreateTreeWithIgnoredDelete(baseTree) {
   );
 
   const body = {
-    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764",
+    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764"
   };
 
   m.reply(200, body);
@@ -518,16 +518,16 @@ function mockCreateTreeWithDelete(baseTree) {
         path: "wow-this-file-disappeared",
         sha: null,
         mode: "100644",
-        type: "commit",
+        type: "commit"
       },
       {
         path: "wow-this-file-was-created",
         sha: "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b",
         mode: "100644",
-        type: "blob",
-      },
+        type: "blob"
+      }
     ],
-    base_tree: baseTree,
+    base_tree: baseTree
   };
 
   const m = nock("https://api.github.com").post(
@@ -536,7 +536,7 @@ function mockCreateTreeWithDelete(baseTree) {
   );
 
   const body = {
-    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764",
+    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764"
   };
 
   m.reply(200, body);
@@ -546,7 +546,7 @@ function mockCommitSubmodule(baseTree) {
   const expectedBody = {
     message: "Your submodule commit message",
     tree: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9",
-    parents: [baseTree],
+    parents: [baseTree]
   };
 
   const m = nock("https://api.github.com").post(
@@ -555,7 +555,7 @@ function mockCommitSubmodule(baseTree) {
   );
 
   const body = {
-    sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0",
+    sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0"
   };
 
   m.reply(200, body);
@@ -565,7 +565,7 @@ function mockCommit(baseTree) {
   const expectedBody = {
     message: "Your commit message",
     tree: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9",
-    parents: [baseTree],
+    parents: [baseTree]
   };
 
   const m = nock("https://api.github.com").post(
@@ -574,7 +574,7 @@ function mockCommit(baseTree) {
   );
 
   const body = {
-    sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0",
+    sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0"
   };
 
   m.reply(200, body);
@@ -584,7 +584,7 @@ function mockCommitSecond(baseTree) {
   const expectedBody = {
     message: "This is the second commit",
     tree: "fffff6bbf5ab983d31b1cca28e204b71ab722764",
-    parents: [baseTree],
+    parents: [baseTree]
   };
 
   const m = nock("https://api.github.com").post(
@@ -593,7 +593,7 @@ function mockCommitSecond(baseTree) {
   );
 
   const body = {
-    sha: "45d77edc93556e3a997bf73d5ed4d9fb57068928",
+    sha: "45d77edc93556e3a997bf73d5ed4d9fb57068928"
   };
 
   m.reply(200, body);
@@ -602,7 +602,7 @@ function mockCommitSecond(baseTree) {
 function mockUpdateRef(branch) {
   const expectedBody = {
     force: true,
-    sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0",
+    sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0"
   };
 
   const m = nock("https://api.github.com").patch(
@@ -617,7 +617,7 @@ function mockCreateRef(branch, sha) {
   const expectedBody = {
     force: true,
     ref: `refs/heads/${branch}`,
-    sha: sha || "ef105a72c03ce2743d90944c2977b1b5563b43c0",
+    sha: sha || "ef105a72c03ce2743d90944c2977b1b5563b43c0"
   };
 
   const m = nock("https://api.github.com").post(
@@ -632,7 +632,7 @@ function mockCreateRefSecond(branch, sha) {
   const expectedBody = {
     force: true,
     ref: `refs/heads/${branch}`,
-    sha: sha || "45d77edc93556e3a997bf73d5ed4d9fb57068928",
+    sha: sha || "45d77edc93556e3a997bf73d5ed4d9fb57068928"
   };
 
   const m = nock("https://api.github.com").post(
@@ -645,7 +645,7 @@ function mockCreateRefSecond(branch, sha) {
 
 function mockGetRepo() {
   const body = {
-    default_branch: "master",
+    default_branch: "master"
   };
 
   nock("https://api.github.com")
