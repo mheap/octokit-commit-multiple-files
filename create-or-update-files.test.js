@@ -249,14 +249,15 @@ test(`success (createBranch, use default base branch, multiple commits)`, async 
   await expect(run(body)).resolves.toEqual(branch);
 });
 
-test("success (branch exists - discard deletions and retry on failure) - file deletions and updates", async () => {
+test("success (ignore missing deleted files)", async () => {
   mockGetRef(branch, `sha-${branch}`, false);
   mockGetRef(base, `sha-${base}`, true);
   mockCreateBlobFileTwo();
   mockCreateBlobFileThree();
   mockCreateBlobFileFour();
+  mockGetContents("wow-this-file-disappeared", `sha-${base}`, false);
   mockCreateTree(`sha-${base}`);
-  mockCreateTreeWithDelete(`sha-${base}`);
+  mockCreateTreeWithIgnoredDelete(`sha-${base}`);
   mockCommitSecond(`sha-${base}`);
   mockCreateRefSecond(branch);
 
@@ -266,7 +267,7 @@ test("success (branch exists - discard deletions and retry on failure) - file de
       filesToDelete: ["wow-this-file-disappeared"],
       ignoreDeletionFailures: true,
       files: {
-        "wow-this-file-didnt": {
+        "wow-this-file-was-created": {
           contents: "hi",
         },
       },
@@ -281,11 +282,43 @@ test("success (branch exists - discard deletions and retry on failure) - file de
   await expect(run(body)).resolves.toEqual(branch);
 });
 
-test("success (branch exists - throw and return on failure) - file deletions and updates", async () => {
+test("success (fileToDelete exists)", async () => {
   mockGetRef(branch, `sha-${branch}`, false);
   mockGetRef(base, `sha-${base}`, true);
   mockCreateBlobFileTwo();
   mockCreateBlobFileThree();
+  mockCreateBlobFileFour();
+  mockGetContents("wow-this-file-disappeared", `sha-${base}`, true);
+  mockCreateTreeWithDelete(`sha-${base}`);
+  mockCommitSecond(`sha-${base}`);
+  mockCreateRefSecond(branch);
+
+  const changes = [
+    {
+      message: "This is the second commit",
+      filesToDelete: ["wow-this-file-disappeared"],
+      files: {
+        "wow-this-file-was-created": {
+          contents: "hi",
+        },
+      },
+    },
+  ];
+
+  const body = {
+    ...validRequest,
+    changes,
+  };
+
+  await expect(run(body)).resolves.toEqual(branch);
+});
+
+test("failure (fileToDelete is missing)", async () => {
+  mockGetRef(branch, `sha-${branch}`, false);
+  mockGetRef(base, `sha-${base}`, true);
+  mockCreateBlobFileTwo();
+  mockCreateBlobFileThree();
+  mockGetContents("wow-this-file-disappeared", `sha-${base}`, false);
   mockCreateTree(`sha-${base}`);
   mockCommit(`sha-${base}`);
   mockCreateRef(branch);
@@ -296,7 +329,7 @@ test("success (branch exists - throw and return on failure) - file deletions and
       filesToDelete: ["wow-this-file-disappeared"],
       ignoreDeletionFailures: false,
       files: {
-        "wow-this-file-didnt": {
+        "wow-this-file-was-created": {
           contents: "hi",
         },
       },
@@ -452,11 +485,43 @@ function mockCreateTreeSecond(baseTree) {
   m.reply(200, body);
 }
 
-function mockCreateTreeWithDelete(baseTree) {
+function mockCreateTreeWithIgnoredDelete(baseTree) {
   const expectedBody = {
     tree: [
       {
-        path: "wow-this-file-didnt",
+        path: "wow-this-file-was-created",
+        sha: "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b",
+        mode: "100644",
+        type: "blob",
+      },
+    ],
+    base_tree: baseTree,
+  };
+
+  const m = nock("https://api.github.com").post(
+    `/repos/${owner}/${repo}/git/trees`,
+    expectedBody
+  );
+
+  const body = {
+    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764",
+  };
+
+  m.reply(200, body);
+}
+
+function mockCreateTreeWithDelete(baseTree) {
+  // The order here is important. Removals must be applied before creations
+  const expectedBody = {
+    tree: [
+      {
+        path: "wow-this-file-disappeared",
+        sha: null,
+        mode: "100644",
+        type: "commit",
+      },
+      {
+        path: "wow-this-file-was-created",
         sha: "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b",
         mode: "100644",
         type: "blob",
@@ -586,4 +651,17 @@ function mockGetRepo() {
   nock("https://api.github.com")
     .get(`/repos/${owner}/${repo}`)
     .reply(200, body);
+}
+
+function mockGetContents(fileName, branch, success) {
+  const m = nock("https://api.github.com").head(
+    `/repos/${owner}/${repo}/contents/${fileName}?ref=${branch}`
+  );
+
+  if (success) {
+    m.reply(200);
+  } else {
+    m.reply(404);
+  }
+  return m;
 }

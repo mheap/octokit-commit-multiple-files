@@ -75,6 +75,37 @@ module.exports = function(octokit, opts) {
         }
 
         const treeItems = [];
+        // Handle file deletions
+        if (hasFilesToDelete) {
+          for (const fileName of change.filesToDelete) {
+            const exists = await fileExistsInRepo(
+              octokit,
+              owner,
+              repo,
+              fileName,
+              baseTree
+            );
+
+            // If it doesn't exist, and we're not ignoring missing files
+            // reject the promise
+            if (!exists && !change.ignoreDeletionFailures) {
+              return reject(
+                `The file ${fileName} could not be found in the repo`
+              );
+            }
+
+            // At this point it either exists, or we're ignoring failures
+            if (exists) {
+              treeItems.push({
+                path: fileName,
+                sha: null, // sha as null implies that the file should be deleted
+                mode: "100644",
+                type: "commit",
+              });
+            }
+          }
+        }
+
         for (const fileName in change.files) {
           const properties = change.files[fileName] || "";
 
@@ -102,38 +133,7 @@ module.exports = function(octokit, opts) {
           });
         }
 
-        // Handle file deletions
-        if (hasFilesToDelete) {
-          for (const fileName of change.filesToDelete) {
-            const exists = await fileExistsInRepo(
-              octokit,
-              owner,
-              repo,
-              fileName,
-              branchName
-            );
-
-            // If it doesn't exist, and we're not ignoring missing files
-            // reject the promise
-            if (!exists && !change.ignoreDeletionFailures) {
-              return reject(
-                `The file ${fileName} could not be found in the repo`
-              );
-            }
-
-            // At this point it either exists, or we're ignoring failures
-            if (exists) {
-              treeItems.push({
-                path: fileName,
-                sha: null, // sha as null implies that the file should be deleted
-                mode: "100644",
-                type: "commit",
-              });
-            }
-          }
-        }
-
-        // no need to issue farther requests if there are no updates, creations and deletions
+        // no need to issue further requests if there are no updates, creations and deletions
         if (treeItems.length === 0) {
           continue;
         }
@@ -190,14 +190,14 @@ module.exports = function(octokit, opts) {
 
 async function fileExistsInRepo(octokit, owner, repo, path, branch) {
   try {
-    await octokit.repos.getContents({
+    await octokit.repos.getContent({
       method: "HEAD",
       owner,
       repo,
       path,
       ref: branch,
     });
-    return path;
+    return true;
   } catch (e) {
     return false;
   }
