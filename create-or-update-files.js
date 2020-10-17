@@ -1,4 +1,4 @@
-module.exports = function(octokit, opts) {
+module.exports = function (octokit, opts) {
   return new Promise(async (resolve, reject) => {
     // Up front validation
     try {
