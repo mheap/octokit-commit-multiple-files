@@ -180,6 +180,48 @@ test(`success (branch exists)`, async () => {
   await expect(run(body)).resolves.toEqual(branch);
 });
 
+test(`success (committer details)`, async () => {
+  const committer = {
+    name: "Ashley Person",
+    email: "a.person@example.com"
+  };
+  const body = {
+    ...validRequest,
+    committer
+  };
+  mockGetRef(branch, `sha-${branch}`, true);
+  mockCreateBlobFileOne();
+  mockCreateBlobFileTwo();
+  mockCreateTree(`sha-${branch}`);
+  mockCommit(`sha-${branch}`, {
+    committer
+  });
+  mockUpdateRef(branch);
+
+  await expect(run(body)).resolves.toEqual(branch);
+});
+
+test(`success (author details)`, async () => {
+  const author = {
+    name: "Ashley Person",
+    email: "a.person@example.com"
+  };
+  const body = {
+    ...validRequest,
+    author
+  };
+  mockGetRef(branch, `sha-${branch}`, true);
+  mockCreateBlobFileOne();
+  mockCreateBlobFileTwo();
+  mockCreateTree(`sha-${branch}`);
+  mockCommit(`sha-${branch}`, {
+    author
+  });
+  mockUpdateRef(branch);
+
+  await expect(run(body)).resolves.toEqual(branch);
+});
+
 test(`success (createBranch, base provided)`, async () => {
   const body = {
     ...validRequest,
@@ -561,11 +603,14 @@ function mockCommitSubmodule(baseTree) {
   m.reply(200, body);
 }
 
-function mockCommit(baseTree) {
+function mockCommit(baseTree, additional) {
+  additional = additional || {};
+
   const expectedBody = {
     message: "Your commit message",
     tree: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9",
-    parents: [baseTree]
+    parents: [baseTree],
+    ...additional
   };
 
   const m = nock("https://api.github.com").post(
