@@ -19,6 +19,8 @@ module.exports = function(octokit, opts) {
         base,
         branch: branchName,
         createBranch,
+        committer,
+        author,
         changes
       } = opts;
 
@@ -152,6 +154,8 @@ module.exports = function(octokit, opts) {
           octokit,
           owner,
           repo,
+          committer,
+          author,
           message,
           tree,
           baseTree
@@ -203,12 +207,29 @@ async function fileExistsInRepo(octokit, owner, repo, path, branch) {
   }
 }
 
-async function createCommit(octokit, owner, repo, message, tree, baseTree) {
+async function createCommit(
+  octokit,
+  owner,
+  repo,
+  committer,
+  author,
+  message,
+  tree,
+  baseTree
+) {
   return (
     await octokit.git.createCommit({
       owner,
       repo,
       message,
+      committer: {
+        name: committer.name,
+        email: committer.email
+      },
+      author: {
+        name: author.name,
+        email: author.email
+      },
       tree: tree.sha,
       parents: [baseTree]
     })
