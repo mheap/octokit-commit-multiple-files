@@ -222,14 +222,8 @@ async function createCommit(
       owner,
       repo,
       message,
-      committer: {
-        name: committer.name,
-        email: committer.email
-      },
-      author: {
-        name: author.name,
-        email: author.email
-      },
+      committer,
+      author,
       tree: tree.sha,
       parents: [baseTree]
     })
