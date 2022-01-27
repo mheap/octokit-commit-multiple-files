@@ -58,6 +58,7 @@ module.exports = function(octokit, opts) {
       }
 
       // Create blobs
+      const commits = [];
       for (const change of changes) {
         const message = change.message;
         if (!message) {
@@ -163,6 +164,7 @@ module.exports = function(octokit, opts) {
 
         // Update the base tree if we have another commit to make
         baseTree = commit.sha;
+        commits.push(commit);
       }
 
       // Create a ref that points to that tree
@@ -185,7 +187,7 @@ module.exports = function(octokit, opts) {
 
       // Return the new branch name so that we can use it later
       // e.g. to create a pull request
-      return resolve(branchName);
+      return resolve({ commits });
     } catch (e) {
       return reject(e);
     }
