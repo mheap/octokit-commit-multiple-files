@@ -388,6 +388,18 @@ test("failure (fileToDelete is missing)", async () => {
   );
 });
 
+test("Loads plugin", () => {
+  const TestOctokit = Octokit.plugin(require("."));
+  const testOctokit = new TestOctokit();
+  expect(testOctokit).toHaveProperty("rest.repos.createOrUpdateFiles");
+});
+
+test("Does not overwrite other methods", () => {
+  const TestOctokit = Octokit.plugin(require("."));
+  const testOctokit = new TestOctokit();
+  expect(testOctokit).toHaveProperty("rest.repos.acceptInvitation");
+});
+
 function mockGetRef(branch, sha, success) {
   const m = nock("https://api.github.com").get(
     `/repos/${owner}/${repo}/git/ref/heads%2F${branch}`
