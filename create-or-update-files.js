@@ -43,7 +43,7 @@ module.exports = function(octokit, opts) {
         if (!base) {
           // Work out the default branch
           base = (
-            await octokit.repos.get({
+            await octokit.rest.repos.get({
               owner,
               repo
             })
@@ -175,7 +175,7 @@ module.exports = function(octokit, opts) {
         updateRefBase = "";
       }
 
-      await octokit.git[action]({
+      await octokit.rest.git[action]({
         owner,
         repo,
         force: true,
@@ -194,7 +194,7 @@ module.exports = function(octokit, opts) {
 
 async function fileExistsInRepo(octokit, owner, repo, path, branch) {
   try {
-    await octokit.repos.getContent({
+    await octokit.rest.repos.getContent({
       method: "HEAD",
       owner,
       repo,
@@ -218,7 +218,7 @@ async function createCommit(
   baseTree
 ) {
   return (
-    await octokit.git.createCommit({
+    await octokit.rest.git.createCommit({
       owner,
       repo,
       message,
@@ -232,7 +232,7 @@ async function createCommit(
 
 async function createTree(octokit, owner, repo, treeItems, baseTree) {
   return (
-    await octokit.git.createTree({
+    await octokit.rest.git.createTree({
       owner,
       repo,
       tree: treeItems,
@@ -246,7 +246,7 @@ async function createBlob(octokit, owner, repo, contents, type) {
     return contents;
   } else {
     const file = (
-      await octokit.git.createBlob({
+      await octokit.rest.git.createBlob({
         owner,
         repo,
         content: Buffer.from(contents).toString("base64"),
@@ -259,7 +259,7 @@ async function createBlob(octokit, owner, repo, contents, type) {
 
 async function loadRef(octokit, owner, repo, ref) {
   try {
-    const x = await octokit.git.getRef({
+    const x = await octokit.rest.git.getRef({
       owner,
       repo,
       ref: `heads/${ref}`
