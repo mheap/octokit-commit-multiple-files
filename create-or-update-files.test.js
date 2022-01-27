@@ -32,6 +32,15 @@ I hope it works`,
 
 // Destructuring for easier access later
 let { owner, repo, base, branch } = validRequest;
+const mockCommitList = {
+  commits: [{ sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0" }]
+};
+const mockSecondCommitList = {
+  commits: [{ sha: "45d77edc93556e3a997bf73d5ed4d9fb57068928" }]
+};
+const mockSubmoduleCommitList = {
+  commits: [{ sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0" }]
+};
 
 for (let req of ["owner", "repo", "branch"]) {
   const body = { ...validRequest };
@@ -163,7 +172,7 @@ test(`success (submodule, branch exists)`, async () => {
   mockCommitSubmodule(`sha-${branch}`);
   mockUpdateRef(branch);
 
-  await expect(run(body)).resolves.toEqual(branch);
+  await expect(run(body)).resolves.toEqual(mockSubmoduleCommitList);
 });
 
 test(`success (branch exists)`, async () => {
@@ -177,7 +186,7 @@ test(`success (branch exists)`, async () => {
   mockCommit(`sha-${branch}`);
   mockUpdateRef(branch);
 
-  await expect(run(body)).resolves.toEqual(branch);
+  await expect(run(body)).resolves.toEqual(mockCommitList);
 });
 
 test(`success (committer details)`, async () => {
@@ -198,7 +207,7 @@ test(`success (committer details)`, async () => {
   });
   mockUpdateRef(branch);
 
-  await expect(run(body)).resolves.toEqual(branch);
+  await expect(run(body)).resolves.toEqual(mockCommitList);
 });
 
 test(`success (author details)`, async () => {
@@ -219,7 +228,7 @@ test(`success (author details)`, async () => {
   });
   mockUpdateRef(branch);
 
-  await expect(run(body)).resolves.toEqual(branch);
+  await expect(run(body)).resolves.toEqual(mockCommitList);
 });
 
 test(`success (createBranch, base provided)`, async () => {
@@ -235,7 +244,7 @@ test(`success (createBranch, base provided)`, async () => {
   mockCommit(`sha-${base}`);
   mockCreateRef(branch);
 
-  await expect(run(body)).resolves.toEqual(branch);
+  await expect(run(body)).resolves.toEqual(mockCommitList);
 });
 
 test(`success (createBranch, use default base branch)`, async () => {
@@ -256,7 +265,7 @@ test(`success (createBranch, use default base branch)`, async () => {
   mockCommit(`sha-${repoDefaultBranch}`);
   mockCreateRef(branch);
 
-  await expect(run(body)).resolves.toEqual(branch);
+  await expect(run(body)).resolves.toEqual(mockCommitList);
 });
 
 test(`success (createBranch, use default base branch, multiple commits)`, async () => {
@@ -288,7 +297,9 @@ test(`success (createBranch, use default base branch, multiple commits)`, async 
   mockCommitSecond(`ef105a72c03ce2743d90944c2977b1b5563b43c0`);
   mockCreateRef(branch, `45d77edc93556e3a997bf73d5ed4d9fb57068928`);
 
-  await expect(run(body)).resolves.toEqual(branch);
+  await expect(run(body)).resolves.toEqual({
+    commits: [...mockCommitList.commits, ...mockSecondCommitList.commits]
+  });
 });
 
 test("success (ignore missing deleted files)", async () => {
@@ -321,7 +332,7 @@ test("success (ignore missing deleted files)", async () => {
     changes
   };
 
-  await expect(run(body)).resolves.toEqual(branch);
+  await expect(run(body)).resolves.toEqual(mockSecondCommitList);
 });
 
 test("success (fileToDelete exists)", async () => {
@@ -352,7 +363,7 @@ test("success (fileToDelete exists)", async () => {
     changes
   };
 
-  await expect(run(body)).resolves.toEqual(branch);
+  await expect(run(body)).resolves.toEqual(mockSecondCommitList);
 });
 
 test("failure (fileToDelete is missing)", async () => {
