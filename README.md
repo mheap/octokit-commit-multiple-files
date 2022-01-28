@@ -22,7 +22,7 @@ Octokit = Octokit.plugin(require("octokit-commit-multiple-files"));
 
 const octokit = new Octokit();
 
-const branchName = await octokit.rest.repos.createOrUpdateFiles({
+const commits = await octokit.rest.repos.createOrUpdateFiles({
   owner,
   repo,
   branch,
