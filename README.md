@@ -1,6 +1,6 @@
 # octokit-commit-multiple-files
 
-This plugin is an alternative to using `octokit.repos.createOrUpdateFile` which allows you to edit the contents of a single file.
+This plugin is an alternative to using `octokit.rest.repos.createOrUpdateFile` which allows you to edit the contents of a single file.
 
 ## Installation
 
@@ -10,7 +10,7 @@ npm install octokit-commit-multiple-files --save
 
 ## Usage
 
-This plugin accepts `owner`, `repo`, `path` and `branch` like `.createOrUpdateFile` ([Octokit Docs](https://octokit.github.io/rest.js/#octokit-routes-repos-create-or-update-file)).
+This plugin accepts `owner`, `repo`, `path` and `branch` like `.createOrUpdateFile` ([Octokit Docs](https://octokit.github.io/rest.js/v18#repos-create-or-update-file)).
 
 If the `branch` provided does not exist, the plugin will error. To automatically create it, set `createBranch` to true. You may provide a `base` branch if you choose to do this, or the plugin will use the repo's default branch as the base.
 
@@ -22,7 +22,7 @@ Octokit = Octokit.plugin(require("octokit-commit-multiple-files"));
 
 const octokit = new Octokit();
 
-const branchName = await octokit.repos.createOrUpdateFiles({
+const branchName = await octokit.rest.repos.createOrUpdateFiles({
   owner,
   repo,
   branch,
