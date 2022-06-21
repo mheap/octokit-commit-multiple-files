@@ -21,11 +21,11 @@
     "eslint": "^8.7.0",
     "eslint-plugin-prettier": "^3.1.2",
     "jest": "^27.4.7",
-    "prettier": "^1.19.1"
+    "prettier": "^1.19.1",
+    "nock": "^11.7.0"
   },
   "dependencies": {
-    "is-base64": "^1.1.0",
-    "nock": "^11.7.0"
+    "is-base64": "^1.1.0"
   },
   "peerDependencies": {
     "@octokit/rest": ">=18.5.0"
