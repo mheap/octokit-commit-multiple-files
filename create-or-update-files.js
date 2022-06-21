@@ -1,3 +1,4 @@
+const isBase64 = require("is-base64");
 module.exports = function(octokit, opts) {
   return new Promise(async (resolve, reject) => {
     // Up front validation
@@ -247,11 +248,17 @@ async function createBlob(octokit, owner, repo, contents, type) {
   if (type === "commit") {
     return contents;
   } else {
+    let content = contents;
+
+    if (!isBase64(content)) {
+      content = Buffer.from(contents).toString("base64");
+    }
+
     const file = (
       await octokit.rest.git.createBlob({
         owner,
         repo,
-        content: Buffer.from(contents).toString("base64"),
+        content,
         encoding: "base64"
       })
     ).data;
