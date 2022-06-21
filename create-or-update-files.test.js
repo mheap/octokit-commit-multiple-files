@@ -189,6 +189,31 @@ test(`success (branch exists)`, async () => {
   await expect(run(body)).resolves.toEqual(mockCommitList);
 });
 
+test(`success (base64 encoded body)`, async () => {
+  const body = {
+    ...validRequest,
+    changes: [
+      {
+        message: "Your commit message",
+        files: {
+          "test.md": "SGVsbG8gV29ybGQ=",
+          "test2.md": {
+            contents: `Something else`
+          }
+        }
+      }
+    ]
+  };
+  mockGetRef(branch, `sha-${branch}`, true);
+  mockCreateBlobBase64PreEncoded();
+  mockCreateBlobFileTwo();
+  mockCreateTree(`sha-${branch}`);
+  mockCommit(`sha-${branch}`);
+  mockUpdateRef(branch);
+
+  await expect(run(body)).resolves.toEqual(mockCommitList);
+});
+
 test(`success (committer details)`, async () => {
   const committer = {
     name: "Ashley Person",
@@ -467,6 +492,13 @@ function mockCreateBlobFileThree() {
 
 function mockCreateBlobFileFour() {
   return mockCreateBlob("aGk=", "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b");
+}
+
+function mockCreateBlobBase64PreEncoded() {
+  return mockCreateBlob(
+    "SGVsbG8gV29ybGQ=",
+    "afb296bb7f3e327767bdda481c4877ba4a09e02e"
+  );
 }
 
 function mockCreateTreeSubmodule(baseTree) {

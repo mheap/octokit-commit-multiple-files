@@ -49,6 +49,25 @@ I hope it works`,
 });
 ```
 
+If you want to upload non-text data, you can `base64`` encode the content and provide that as the value. Here's an example that would upload a small GitHub icon to a repository:
+
+```javascript
+const commits = await octokit.rest.repos.createOrUpdateFiles({
+  owner,
+  repo,
+  branch,
+  createBranch,
+  changes: [
+    {
+      message: "Add Icon",
+      files: {
+            "icon.png": `iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADFUlEQVR42u2WXyjzYRTHvz/N3zZ/5sJyoWEUEleKrYbcaEXKXCBWVsrFkii3LrVwo6Sslj/hhqS4cecOtcWFtUbI34RlNn83786p1fu+F+9+a/Ou982pp56e3+l3Ps855/k+j6BWqwMABMTBPoMmBAE+4xE8ZN8A3wCiAYqKinB8fAy/3/9Hv6ysLCQnJ+P6+jp2AEqlEvPz87i/v8fc3By2t7dRUFCAzMxM/k7rNDo7O1FbWwu73Q6TyRQ7gOrqapjNZtFpvby8RFtbW+wAVCoVrFaraICTkxPORswAhoaG0NzcLBqAbGxsDKurq9EDyGQyrK+vQyKRRARwdnaG9vb26AHKy8sxNTXF8/39fSwsLODx8RGpqalIS0sjPYfP58Pz8zOys7NhMBj4xNB6XV0dPj4+ogMoKyvD9PQ0bm5u0NHRgZaWFg5ssVh+8aOaJyUlYWVlBUtLS5BKpXwiogaQy+VYW1vDxsYGxsfHUV9fj6urK9ze3uLi4oJ9UlJSoNVqcXd3x6kfHBzkzDU2NkZeAhKShIQETiH9mHY7MjKC8/NzDA8Pw9DdDc/TEzY3Nznt5CcIArq6urgU1C8TExO8To1IPjTIh9ZIL8ICkDMNr9eLl5cX3g39rK+vj1NKYA6HgwXq7e2Nz31+fj6X4PX1lcvT39+Pg4MDVkUqBwWn8fDwEFkJEhMT8f7+jtLSUhiNRjidTuzu7rLUymTSIJAfHo+HS1VRUYGamhrMzs5ib28vbPpFAVDNqRFnZmY4lQqFAg0NDejt7eUskdHOSKi2trZwenoqKrBoALKenh4EAgEsLi7yZTQ6OoqqqiqeU3DSiJ2dHQwMDEQUXDRAeno6JicnuSGpLwoLC2Gz2ZCTk8NZcbvdyM3NhV6v/xqAEASda2oq6niqcUlJCQMcHR2hsrISra2tXwfwsy0vL+Pw8BDFxcXc9X8VgBqPhIlqTgB0QlwuFzQaDZqamsI+WKIG0Ol0fOYzMjJY+UgH8vLyWKpJDwjuSwFCRi8ieqL9Po/U/p1H6TfA/wsQvL0CQuhWiYP9AJQGkyweNFh0AAAAAElFTkSuQmCC`
+      }
+    },
+  ],
+});
+```
+
 In addition, you can set the `mode` of a file change. For example, if you wanted to update a submodule pointer:
 
 ```javascript

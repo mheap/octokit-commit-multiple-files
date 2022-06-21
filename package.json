@@ -24,6 +24,7 @@
     "prettier": "^1.19.1"
   },
   "dependencies": {
+    "is-base64": "^1.1.0",
     "nock": "^11.7.0"
   },
   "peerDependencies": {
