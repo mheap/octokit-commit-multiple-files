@@ -109,5 +109,5 @@ In addition, you can set the `filesToDelete` property as an array of strings (fi
 
 ```javascript
 {
-  "batchSize" = 10
+  "batchSize": 10
 }
