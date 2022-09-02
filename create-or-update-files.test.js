@@ -61,6 +61,11 @@ test(`empty parameter (changes)`, () => {
   expect(run(body)).rejects.toEqual(`No changes provided`);
 });
 
+test(`non-number batchSize (changes)`, () => {
+  const body = { ...validRequest, batchSize: "5" };
+  expect(run(body)).rejects.toEqual(`batchSize must be a number`);
+});
+
 test(`branch does not exist, createBranch false`, async () => {
   mockGetRef(branch, `sha-${branch}`, false);
   const body = { ...validRequest, createBranch: false };

@@ -13,6 +13,14 @@ module.exports = function(octokit, opts) {
         return reject("No changes provided");
       }
 
+      if (!opts.batchSize) {
+        opts.batchSize = 1;
+      }
+
+      if (typeof opts.batchSize !== "number") {
+        return reject(`batchSize must be a number`);
+      }
+
       // Destructuring for easier access later
       let {
         owner,
@@ -22,7 +30,8 @@ module.exports = function(octokit, opts) {
         createBranch,
         committer,
         author,
-        changes
+        changes,
+        batchSize
       } = opts;
 
       let branchAlreadyExists = true;
@@ -81,60 +90,68 @@ module.exports = function(octokit, opts) {
         const treeItems = [];
         // Handle file deletions
         if (hasFilesToDelete) {
-          for (const fileName of change.filesToDelete) {
-            const exists = await fileExistsInRepo(
-              octokit,
-              owner,
-              repo,
-              fileName,
-              baseTree
+          for (const batch of chunk(change.filesToDelete, batchSize)) {
+            await Promise.all(
+              batch.map(async fileName => {
+                const exists = await fileExistsInRepo(
+                  octokit,
+                  owner,
+                  repo,
+                  fileName,
+                  baseTree
+                );
+
+                // If it doesn't exist, and we're not ignoring missing files
+                // reject the promise
+                if (!exists && !change.ignoreDeletionFailures) {
+                  return reject(
+                    `The file ${fileName} could not be found in the repo`
+                  );
+                }
+
+                // At this point it either exists, or we're ignoring failures
+                if (exists) {
+                  treeItems.push({
+                    path: fileName,
+                    sha: null, // sha as null implies that the file should be deleted
+                    mode: "100644",
+                    type: "commit"
+                  });
+                }
+              })
             );
-
-            // If it doesn't exist, and we're not ignoring missing files
-            // reject the promise
-            if (!exists && !change.ignoreDeletionFailures) {
-              return reject(
-                `The file ${fileName} could not be found in the repo`
-              );
-            }
-
-            // At this point it either exists, or we're ignoring failures
-            if (exists) {
-              treeItems.push({
-                path: fileName,
-                sha: null, // sha as null implies that the file should be deleted
-                mode: "100644",
-                type: "commit"
-              });
-            }
           }
         }
 
-        for (const fileName in change.files) {
-          const properties = change.files[fileName] || "";
+        for (const batch of chunk(Object.keys(change.files), batchSize)) {
+          await Promise.all(
+            batch.map(async fileName => {
+              const properties = change.files[fileName] || "";
 
-          const contents = properties.contents || properties;
-          const mode = properties.mode || "100644";
-          const type = properties.type || "blob";
+              const contents = properties.contents || properties;
+              const mode = properties.mode || "100644";
+              const type = properties.type || "blob";
 
-          if (!contents) {
-            return reject(`No file contents provided for ${fileName}`);
-          }
+              if (!contents) {
+                return reject(`No file contents provided for ${fileName}`);
+              }
 
-          const fileSha = await createBlob(
-            octokit,
-            owner,
-            repo,
-            contents,
-            type
+              const fileSha = await createBlob(
+                octokit,
+                owner,
+                repo,
+                contents,
+                type
+              );
+
+              treeItems.push({
+                path: fileName,
+                sha: fileSha,
+                mode: mode,
+                type: type
+              });
+            })
           );
-
-          treeItems.push({
-            path: fileName,
-            sha: fileSha,
-            mode: mode,
-            type: type
-          });
         }
 
         // no need to issue further requests if there are no updates, creations and deletions
@@ -278,3 +295,11 @@ async function loadRef(octokit, owner, repo, ref) {
     // console.log(e);
   }
 }
+
+const chunk = (input, size) => {
+  return input.reduce((arr, item, idx) => {
+    return idx % size === 0
+      ? [...arr, [item]]
+      : [...arr.slice(0, -1), [...arr.slice(-1)[0], item]];
+  }, []);
+};
