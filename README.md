@@ -104,3 +104,10 @@ In addition, you can set the `filesToDelete` property as an array of strings (fi
   "ignoreDeletionFailures": true,
 }
 ```
+
+- If `batchSize` is set, then file deletions and file uploads will use batched concurrent requests as opposed to iterating through them. This can be helpful for uploading many small files. Beware of your Github usage limits. 
+
+```javascript
+{
+  "batchSize": 10
+}
