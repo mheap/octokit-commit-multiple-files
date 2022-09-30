@@ -1,5 +1,5 @@
 const isBase64 = require("is-base64");
-module.exports = function(octokit, opts) {
+module.exports = function (octokit, opts) {
   return new Promise(async (resolve, reject) => {
     // Up front validation
     try {
@@ -31,7 +31,7 @@ module.exports = function(octokit, opts) {
         committer,
         author,
         changes,
-        batchSize
+        batchSize,
       } = opts;
 
       let branchAlreadyExists = true;
@@ -55,7 +55,7 @@ module.exports = function(octokit, opts) {
           base = (
             await octokit.rest.repos.get({
               owner,
-              repo
+              repo,
             })
           ).data.default_branch;
         }
@@ -92,7 +92,7 @@ module.exports = function(octokit, opts) {
         if (hasFilesToDelete) {
           for (const batch of chunk(change.filesToDelete, batchSize)) {
             await Promise.all(
-              batch.map(async fileName => {
+              batch.map(async (fileName) => {
                 const exists = await fileExistsInRepo(
                   octokit,
                   owner,
@@ -115,7 +115,7 @@ module.exports = function(octokit, opts) {
                     path: fileName,
                     sha: null, // sha as null implies that the file should be deleted
                     mode: "100644",
-                    type: "commit"
+                    type: "commit",
                   });
                 }
               })
@@ -125,7 +125,7 @@ module.exports = function(octokit, opts) {
 
         for (const batch of chunk(Object.keys(change.files), batchSize)) {
           await Promise.all(
-            batch.map(async fileName => {
+            batch.map(async (fileName) => {
               const properties = change.files[fileName] || "";
 
               const contents = properties.contents || properties;
@@ -148,7 +148,7 @@ module.exports = function(octokit, opts) {
                 path: fileName,
                 sha: fileSha,
                 mode: mode,
-                type: type
+                type: type,
               });
             })
           );
@@ -200,7 +200,7 @@ module.exports = function(octokit, opts) {
         repo,
         force: true,
         ref: `${updateRefBase}heads/${branchName}`,
-        sha: baseTree
+        sha: baseTree,
       });
 
       // Return the new branch name so that we can use it later
@@ -219,7 +219,7 @@ async function fileExistsInRepo(octokit, owner, repo, path, branch) {
       owner,
       repo,
       path,
-      ref: branch
+      ref: branch,
     });
     return true;
   } catch (e) {
@@ -245,7 +245,7 @@ async function createCommit(
       committer,
       author,
       tree: tree.sha,
-      parents: [baseTree]
+      parents: [baseTree],
     })
   ).data;
 }
@@ -256,7 +256,7 @@ async function createTree(octokit, owner, repo, treeItems, baseTree) {
       owner,
       repo,
       tree: treeItems,
-      base_tree: baseTree
+      base_tree: baseTree,
     })
   ).data;
 }
@@ -276,7 +276,7 @@ async function createBlob(octokit, owner, repo, contents, type) {
         owner,
         repo,
         content,
-        encoding: "base64"
+        encoding: "base64",
       })
     ).data;
     return file.sha;
@@ -288,7 +288,7 @@ async function loadRef(octokit, owner, repo, ref) {
     const x = await octokit.rest.git.getRef({
       owner,
       repo,
-      ref: `heads/${ref}`
+      ref: `heads/${ref}`,
     });
     return x.data.object.sha;
   } catch (e) {
