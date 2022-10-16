@@ -1,4 +1,47 @@
 const isBase64 = require("is-base64");
+
+/**
+ * @typedef {Object} Options
+ * @property {Change[]} changes
+ * @property {number} batchSize
+ * @property {string} owner
+ * @property {string} repo
+ * @property {string} base
+ * @property {string} branch
+ * @property {boolean} createBranch
+ * @property {GitUser} committer
+ * @property {GitUser} author
+ */
+
+/**
+ * @typedef {Object} GitUser
+ * @property {string} name
+ * @property {string} email
+ * @property {string} date
+ */
+
+/**
+ * @typedef {Object} ChangeSet
+ * @property {string} contents
+ * @property {string} mode
+ * @property {string} type
+ */
+
+/**
+ * @typedef {Object} Change
+ * @property {string} message
+ * @property {boolean} ignoreDeletionFailures
+ * @property {string[]} filesToDelete
+ * @property {Record<string, string|ChangeSet>} files
+ */
+
+/** @typedef { import('@octokit/rest').Octokit } octokit */
+
+/**
+ * @param {octokit} octokit
+ * @param {Options} opts
+ * @returns {Promise}
+ */
 module.exports = function (octokit, opts) {
   return new Promise(async (resolve, reject) => {
     // Up front validation
@@ -125,12 +168,28 @@ module.exports = function (octokit, opts) {
 
         for (const batch of chunk(Object.keys(change.files), batchSize)) {
           await Promise.all(
-            batch.map(async (fileName) => {
+            batch.map(async (/** @type {string | number} */ fileName) => {
               const properties = change.files[fileName] || "";
 
-              const contents = properties.contents || properties;
-              const mode = properties.mode || "100644";
-              const type = properties.type || "blob";
+              // Set our defaults
+              let contents;
+              let mode;
+              let type;
+
+              if (typeof properties == "string"){
+              contents = properties;
+               mode = "100644";
+               type = "blob";
+              }
+
+              // If a ChangeSet object was provided, use those values instead
+              else if (typeof properties == "object"){
+                contents = properties.contents;
+                mode = properties.mode || "100644";
+                type = properties.type || "blob";
+              } else {
+                throw new Error("Unexpected type provided for `contents`: " + typeof contents)
+              }
 
               if (!contents) {
                 return reject(`No file contents provided for ${fileName}`);
@@ -212,6 +271,13 @@ module.exports = function (octokit, opts) {
   });
 };
 
+/**
+ * @param {Octokit} octokit
+ * @param {string} owner
+ * @param {string} repo
+ * @param {any} path
+ * @param {any} branch
+ */
 async function fileExistsInRepo(octokit, owner, repo, path, branch) {
   try {
     await octokit.rest.repos.getContent({
@@ -227,6 +293,16 @@ async function fileExistsInRepo(octokit, owner, repo, path, branch) {
   }
 }
 
+/**
+ * @param {Octokit} octokit
+ * @param {string} owner
+ * @param {string} repo
+ * @param {GitUser} committer
+ * @param {GitUser} author
+ * @param {string} message
+ * @param {{ sha: any; }} tree
+ * @param {any} baseTree
+ */
 async function createCommit(
   octokit,
   owner,
@@ -250,6 +326,13 @@ async function createCommit(
   ).data;
 }
 
+/**
+ * @param {Octokit} octokit
+ * @param {string} owner
+ * @param {string} repo
+ * @param {any[]} treeItems
+ * @param {any} baseTree
+ */
 async function createTree(octokit, owner, repo, treeItems, baseTree) {
   return (
     await octokit.rest.git.createTree({
@@ -261,6 +344,13 @@ async function createTree(octokit, owner, repo, treeItems, baseTree) {
   ).data;
 }
 
+/**
+ * @param {Octokit} octokit
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} contents
+ * @param {string} type
+ */
 async function createBlob(octokit, owner, repo, contents, type) {
   if (type === "commit") {
     return contents;
@@ -283,6 +373,12 @@ async function createBlob(octokit, owner, repo, contents, type) {
   }
 }
 
+/**
+ * @param {Octokit} octokit
+ * @param {string} owner
+ * @param {string} repo
+ * @param {string} ref
+ */
 async function loadRef(octokit, owner, repo, ref) {
   try {
     const x = await octokit.rest.git.getRef({
