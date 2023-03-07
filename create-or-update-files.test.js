@@ -194,6 +194,22 @@ test(`success (branch exists)`, async () => {
   await expect(run(body)).resolves.toEqual(mockCommitList);
 });
 
+test(`success (branch exists, forkFromBaseBranch: true)`, async () => {
+  const body = {
+    ...validRequest,
+    forkFromBaseBranch: true,
+  };
+  mockGetRef(base, `sha-${base}`, true);
+  mockGetRef(branch, `sha-${branch}`, true);
+  mockCreateBlobFileOne();
+  mockCreateBlobFileTwo();
+  mockCreateTree(`sha-${base}`);
+  mockCommit(`sha-${base}`);
+  mockUpdateRef(branch);
+
+  await expect(run(body)).resolves.toEqual(mockCommitList);
+});
+
 test(`success (base64 encoded body)`, async () => {
   const body = {
     ...validRequest,

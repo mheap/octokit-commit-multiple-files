@@ -68,6 +68,27 @@ const commits = await octokit.rest.repos.createOrUpdateFiles({
 });
 ```
 
+By default the plugin will append commits to an existing branch. If you want to reset the branch to the state of `base` before adding any changes, set `forkFromBaseBranch: true`:
+
+```javascript
+const commits = await octokit.rest.repos.createOrUpdateFiles({
+  owner,
+  repo,
+  branch,
+  createBranch: true,
+  base: "main",
+  forkFromBaseBranch: true
+  changes: [
+    {
+      message: "Your commit message",
+      files: {
+        "test.md": `This example wiped out any previous commits on 'branch' before adding this change`,
+      },
+    },
+  ],
+});
+```
+
 In addition, you can set the `mode` of a file change. For example, if you wanted to update a submodule pointer:
 
 ```javascript

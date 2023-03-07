@@ -32,6 +32,7 @@ module.exports = function (octokit, opts) {
         author,
         changes,
         batchSize,
+        forkFromBaseBranch,
       } = opts;
 
       let branchAlreadyExists = true;
@@ -39,14 +40,16 @@ module.exports = function (octokit, opts) {
 
       // Does the target branch already exist?
       baseTree = await loadRef(octokit, owner, repo, branchName);
-      if (!baseTree) {
-        if (!createBranch) {
+      if (!baseTree || forkFromBaseBranch) {
+        if (!createBranch && !baseTree) {
           return reject(
             `The branch '${branchName}' doesn't exist and createBranch is 'false'`
           );
         }
 
-        branchAlreadyExists = false;
+        if (!baseTree) {
+          branchAlreadyExists = false;
+        }
 
         // If not we use the base branch. If not provided, use the
         // default from the repo
