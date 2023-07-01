@@ -208,7 +208,7 @@ module.exports = function (octokit, opts) {
 
       // Return the new branch name so that we can use it later
       // e.g. to create a pull request
-      return resolve({ commits });
+      return resolve({ commits, base });
     } catch (e) {
       return reject(e);
     }
