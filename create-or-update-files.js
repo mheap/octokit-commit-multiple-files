@@ -43,7 +43,7 @@ module.exports = function (octokit, opts) {
       if (!baseTree || forkFromBaseBranch) {
         if (!createBranch && !baseTree) {
           return reject(
-            `The branch '${branchName}' doesn't exist and createBranch is 'false'`
+            `The branch '${branchName}' doesn't exist and createBranch is 'false'`,
           );
         }
 
@@ -86,7 +86,7 @@ module.exports = function (octokit, opts) {
 
         if (!hasFiles && !hasFilesToDelete) {
           return reject(
-            `either changes[].files or changes[].filesToDelete are required`
+            `either changes[].files or changes[].filesToDelete are required`,
           );
         }
 
@@ -101,14 +101,14 @@ module.exports = function (octokit, opts) {
                   owner,
                   repo,
                   fileName,
-                  baseTree
+                  baseTree,
                 );
 
                 // If it doesn't exist, and we're not ignoring missing files
                 // reject the promise
                 if (!exists && !change.ignoreDeletionFailures) {
                   return reject(
-                    `The file ${fileName} could not be found in the repo`
+                    `The file ${fileName} could not be found in the repo`,
                   );
                 }
 
@@ -121,7 +121,7 @@ module.exports = function (octokit, opts) {
                     type: "commit",
                   });
                 }
-              })
+              }),
             );
           }
         }
@@ -144,7 +144,7 @@ module.exports = function (octokit, opts) {
                 owner,
                 repo,
                 contents,
-                type
+                type,
               );
 
               treeItems.push({
@@ -153,7 +153,7 @@ module.exports = function (octokit, opts) {
                 mode: mode,
                 type: type,
               });
-            })
+            }),
           );
         }
 
@@ -168,7 +168,7 @@ module.exports = function (octokit, opts) {
           owner,
           repo,
           treeItems,
-          baseTree
+          baseTree,
         );
 
         // Create a commit that points to that tree
@@ -180,7 +180,7 @@ module.exports = function (octokit, opts) {
           author,
           message,
           tree,
-          baseTree
+          baseTree,
         );
 
         // Update the base tree if we have another commit to make
@@ -238,7 +238,7 @@ async function createCommit(
   author,
   message,
   tree,
-  baseTree
+  baseTree,
 ) {
   return (
     await octokit.rest.git.createCommit({
