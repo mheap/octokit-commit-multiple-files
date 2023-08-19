@@ -71,7 +71,7 @@ test(`branch does not exist, createBranch false`, async () => {
   const body = { ...validRequest, createBranch: false };
 
   await expect(run(body)).rejects.toEqual(
-    `The branch 'new-branch-name' doesn't exist and createBranch is 'false'`
+    `The branch 'new-branch-name' doesn't exist and createBranch is 'false'`,
   );
 });
 
@@ -81,7 +81,7 @@ test(`branch does not exist, provided base does not exist`, async () => {
   const body = { ...validRequest };
 
   await expect(run(body)).rejects.toEqual(
-    `The branch 'base-branch-name' doesn't exist`
+    `The branch 'base-branch-name' doesn't exist`,
   );
 });
 
@@ -102,7 +102,7 @@ test(`no commit message`, async () => {
     ],
   };
   await expect(run(body)).rejects.toEqual(
-    `changes[].message is a required parameter`
+    `changes[].message is a required parameter`,
   );
 });
 
@@ -117,7 +117,7 @@ test(`no files provided (empty object)`, async () => {
     changes: [{ message: "Test Commit", files: {} }],
   };
   await expect(run(body)).rejects.toEqual(
-    `either changes[].files or changes[].filesToDelete are required`
+    `either changes[].files or changes[].filesToDelete are required`,
   );
 });
 
@@ -129,7 +129,7 @@ test(`no files provided (missing object)`, async () => {
 
   const body = { ...validRequest, changes: [{ message: "Test Commit" }] };
   await expect(run(body)).rejects.toEqual(
-    `either changes[].files or changes[].filesToDelete are required`
+    `either changes[].files or changes[].filesToDelete are required`,
   );
 });
 
@@ -151,7 +151,7 @@ test(`no file contents provided`, async () => {
     ],
   };
   await expect(run(body)).rejects.toEqual(
-    `No file contents provided for test.md`
+    `No file contents provided for test.md`,
   );
 });
 
@@ -441,7 +441,7 @@ test("failure (fileToDelete is missing)", async () => {
   };
 
   await expect(run(body)).rejects.toEqual(
-    "The file wow-this-file-disappeared could not be found in the repo"
+    "The file wow-this-file-disappeared could not be found in the repo",
   );
 });
 
@@ -459,7 +459,7 @@ test("Does not overwrite other methods", () => {
 
 function mockGetRef(branch, sha, success) {
   const m = nock("https://api.github.com").get(
-    `/repos/${owner}/${repo}/git/ref/heads%2F${branch}`
+    `/repos/${owner}/${repo}/git/ref/heads%2F${branch}`,
   );
 
   const body = {
@@ -479,7 +479,7 @@ function mockCreateBlob(content, sha) {
   const expectedBody = { content: content, encoding: "base64" };
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/blobs`,
-    expectedBody
+    expectedBody,
   );
 
   const body = {
@@ -493,21 +493,21 @@ function mockCreateBlob(content, sha) {
 function mockCreateBlobFileOne() {
   return mockCreateBlob(
     "IyBUaGlzIGlzIGEgdGVzdAoKSSBob3BlIGl0IHdvcmtz",
-    "afb296bb7f3e327767bdda481c4877ba4a09e02e"
+    "afb296bb7f3e327767bdda481c4877ba4a09e02e",
   );
 }
 
 function mockCreateBlobFileTwo() {
   return mockCreateBlob(
     "U29tZXRoaW5nIGVsc2U=",
-    "a71ee6d9405fed4f6fd181c61ceb40ef10905d30"
+    "a71ee6d9405fed4f6fd181c61ceb40ef10905d30",
   );
 }
 
 function mockCreateBlobFileThree() {
   return mockCreateBlob(
     "V2l0aCBzb21lIGNvbnRlbnRz",
-    "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b"
+    "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b",
   );
 }
 
@@ -518,7 +518,7 @@ function mockCreateBlobFileFour() {
 function mockCreateBlobBase64PreEncoded() {
   return mockCreateBlob(
     "SGVsbG8gV29ybGQ=",
-    "afb296bb7f3e327767bdda481c4877ba4a09e02e"
+    "afb296bb7f3e327767bdda481c4877ba4a09e02e",
   );
 }
 
@@ -537,7 +537,7 @@ function mockCreateTreeSubmodule(baseTree) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/trees`,
-    expectedBody
+    expectedBody,
   );
 
   const body = {
@@ -568,7 +568,7 @@ function mockCreateTree(baseTree) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/trees`,
-    expectedBody
+    expectedBody,
   );
 
   const body = {
@@ -593,7 +593,7 @@ function mockCreateTreeSecond(baseTree) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/trees`,
-    expectedBody
+    expectedBody,
   );
 
   const body = {
@@ -618,7 +618,7 @@ function mockCreateTreeWithIgnoredDelete(baseTree) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/trees`,
-    expectedBody
+    expectedBody,
   );
 
   const body = {
@@ -650,7 +650,7 @@ function mockCreateTreeWithDelete(baseTree) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/trees`,
-    expectedBody
+    expectedBody,
   );
 
   const body = {
@@ -669,7 +669,7 @@ function mockCommitSubmodule(baseTree) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/commits`,
-    expectedBody
+    expectedBody,
   );
 
   const body = {
@@ -691,7 +691,7 @@ function mockCommit(baseTree, additional) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/commits`,
-    expectedBody
+    expectedBody,
   );
 
   const body = {
@@ -710,7 +710,7 @@ function mockCommitSecond(baseTree) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/commits`,
-    expectedBody
+    expectedBody,
   );
 
   const body = {
@@ -728,7 +728,7 @@ function mockUpdateRef(branch) {
 
   const m = nock("https://api.github.com").patch(
     `/repos/${owner}/${repo}/git/refs/heads%2F${branch}`,
-    expectedBody
+    expectedBody,
   );
 
   m.reply(200);
@@ -743,7 +743,7 @@ function mockCreateRef(branch, sha) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/refs`,
-    expectedBody
+    expectedBody,
   );
 
   m.reply(200);
@@ -758,7 +758,7 @@ function mockCreateRefSecond(branch, sha) {
 
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/refs`,
-    expectedBody
+    expectedBody,
   );
 
   m.reply(200);
@@ -776,7 +776,7 @@ function mockGetRepo() {
 
 function mockGetContents(fileName, branch, success) {
   const m = nock("https://api.github.com").head(
-    `/repos/${owner}/${repo}/contents/${fileName}?ref=${branch}`
+    `/repos/${owner}/${repo}/contents/${fileName}?ref=${branch}`,
   );
 
   if (success) {
