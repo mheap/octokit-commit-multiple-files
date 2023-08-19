@@ -448,7 +448,7 @@ test("failure (fileToDelete is missing)", async () => {
 test("Loads plugin", () => {
   const TestOctokit = Octokit.plugin(require("."));
   const testOctokit = new TestOctokit();
-  expect(testOctokit).toHaveProperty("rest.repos.createOrUpdateFiles");
+  expect(testOctokit).toHaveProperty("createOrUpdateFiles");
 });
 
 test("Does not overwrite other methods", () => {

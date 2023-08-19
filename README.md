@@ -22,7 +22,7 @@ Octokit = Octokit.plugin(require("octokit-commit-multiple-files"));
 
 const octokit = new Octokit();
 
-const commits = await octokit.rest.repos.createOrUpdateFiles({
+const commits = await octokit.createOrUpdateFiles({
   owner,
   repo,
   branch,
@@ -52,7 +52,7 @@ I hope it works`,
 If you want to upload non-text data, you can `base64`` encode the content and provide that as the value. Here's an example that would upload a small GitHub icon to a repository:
 
 ```javascript
-const commits = await octokit.rest.repos.createOrUpdateFiles({
+const commits = await octokit.createOrUpdateFiles({
   owner,
   repo,
   branch,
