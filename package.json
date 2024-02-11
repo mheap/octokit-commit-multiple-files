@@ -1,6 +1,6 @@
 {
   "name": "octokit-commit-multiple-files",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Octokit plugin to create/update multiple files at once",
   "main": "index.js",
   "scripts": {
@@ -24,8 +24,7 @@
     "prettier": "^3.0.2",
     "nock": "^13.3.3"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "peerDependencies": {
     "@octokit/rest": ">=20.0.1"
   }
