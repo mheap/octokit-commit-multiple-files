@@ -25,7 +25,6 @@
     "nock": "^13.3.3"
   },
   "dependencies": {
-    "is-base64": "^1.1.0"
   },
   "peerDependencies": {
     "@octokit/rest": ">=20.0.1"
