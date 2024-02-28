@@ -1,14 +1,23 @@
 function isBase64(str) {
+  // Handle buffer inputs
+  if (Buffer.isBuffer(str)) {
+    str = str.toString("utf8");
+  }
+
   var notBase64 = /[^A-Z0-9+\/=]/i;
-  const isString = (typeof str === 'string' || str instanceof String);
+  const isString = typeof str === "string" || str instanceof String;
 
   if (!isString) {
     let invalidType;
     if (str === null) {
-      invalidType = 'null';
+      invalidType = "null";
     } else {
       invalidType = typeof str;
-      if (invalidType === 'object' && str.constructor && str.constructor.hasOwnProperty('name')) {
+      if (
+        invalidType === "object" &&
+        str.constructor &&
+        str.constructor.hasOwnProperty("name")
+      ) {
         invalidType = str.constructor.name;
       } else {
         invalidType = `a ${invalidType}`;
@@ -21,10 +30,12 @@ function isBase64(str) {
   if (!len || len % 4 !== 0 || notBase64.test(str)) {
     return false;
   }
-  const firstPaddingChar = str.indexOf('=');
-  return firstPaddingChar === -1 ||
+  const firstPaddingChar = str.indexOf("=");
+  return (
+    firstPaddingChar === -1 ||
     firstPaddingChar === len - 1 ||
-    (firstPaddingChar === len - 2 && str[len - 1] === '=');
+    (firstPaddingChar === len - 2 && str[len - 1] === "=")
+  );
 }
 
 module.exports = function (octokit, opts) {

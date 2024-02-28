@@ -235,6 +235,36 @@ test(`success (base64 encoded body)`, async () => {
   await expect(run(body)).resolves.toEqual(mockCommitList);
 });
 
+test(`success (buffer body provided)`, async () => {
+  const body = {
+    ...validRequest,
+    changes: [
+      {
+        message: "Your commit message",
+        files: {
+          "test.md": Buffer.from(
+            `# This is a test
+
+I hope it works`,
+          ),
+          "test2.md": {
+            contents: `Something else`,
+          },
+        },
+      },
+    ],
+  };
+
+  mockGetRef(branch, `sha-${branch}`, true);
+  mockCreateBlobFileOne();
+  mockCreateBlobFileTwo();
+  mockCreateTree(`sha-${branch}`);
+  mockCommit(`sha-${branch}`);
+  mockUpdateRef(branch);
+
+  await expect(run(body)).resolves.toEqual(mockCommitList);
+});
+
 test(`success (committer details)`, async () => {
   const committer = {
     name: "Ashley Person",
