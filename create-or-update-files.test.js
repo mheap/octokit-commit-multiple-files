@@ -245,7 +245,7 @@ test(`success (buffer body provided)`, async () => {
           "test.md": Buffer.from(
             `# This is a test
 
-I hope it works`
+I hope it works`,
           ),
           "test2.md": {
             contents: `Something else`,
