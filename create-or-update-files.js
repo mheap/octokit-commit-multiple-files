@@ -1,4 +1,9 @@
 function isBase64(str) {
+  // Handle buffer inputs
+  if (Buffer.isBuffer(str)) {
+    str = str.toString("utf8");
+  }
+
   var notBase64 = /[^A-Z0-9+\/=]/i;
   const isString = (typeof str === 'string' || str instanceof String);
 
