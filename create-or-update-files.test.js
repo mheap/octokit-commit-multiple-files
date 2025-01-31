@@ -442,6 +442,29 @@ test("success (fileToDelete exists)", async () => {
   await expect(run(body)).resolves.toEqual(mockSecondCommitList);
 });
 
+test("success (fileToDelete exists, no content provided)", async () => {
+  mockGetRef(branch, `sha-${branch}`, false);
+  mockGetRef(base, `sha-${base}`, true);
+  mockGetContents("wow-this-file-disappeared", `sha-${base}`, true);
+  mockCreateTreeWithDeleteOnly(`sha-${base}`);
+  mockCommitSecond(`sha-${base}`);
+  mockCreateRefSecond(branch);
+
+  const changes = [
+    {
+      message: "This is the second commit",
+      filesToDelete: ["wow-this-file-disappeared"],
+    },
+  ];
+
+  const body = {
+    ...validRequest,
+    changes,
+  };
+
+  await expect(run(body)).resolves.toEqual(mockSecondCommitList);
+});
+
 test("failure (fileToDelete is missing)", async () => {
   mockGetRef(branch, `sha-${branch}`, false);
   mockGetRef(base, `sha-${base}`, true);
@@ -641,6 +664,32 @@ function mockCreateTreeWithIgnoredDelete(baseTree) {
         sha: "f65b65200aea4fecbe0db6ddac1c0848cdda1d9b",
         mode: "100644",
         type: "blob",
+      },
+    ],
+    base_tree: baseTree,
+  };
+
+  const m = nock("https://api.github.com").post(
+    `/repos/${owner}/${repo}/git/trees`,
+    expectedBody,
+  );
+
+  const body = {
+    sha: "fffff6bbf5ab983d31b1cca28e204b71ab722764",
+  };
+
+  m.reply(200, body);
+}
+
+function mockCreateTreeWithDeleteOnly(baseTree) {
+  // The order here is important. Removals must be applied before creations
+  const expectedBody = {
+    tree: [
+      {
+        path: "wow-this-file-disappeared",
+        sha: null,
+        mode: "100644",
+        type: "commit",
       },
     ],
     base_tree: baseTree,

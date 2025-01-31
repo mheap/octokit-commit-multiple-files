@@ -165,35 +165,37 @@ module.exports = function (octokit, opts) {
           }
         }
 
-        for (const batch of chunk(Object.keys(change.files), batchSize)) {
-          await Promise.all(
-            batch.map(async (fileName) => {
-              const properties = change.files[fileName] || "";
+        if (hasFiles) {
+          for (const batch of chunk(Object.keys(change.files), batchSize)) {
+            await Promise.all(
+              batch.map(async (fileName) => {
+                const properties = change.files[fileName] || "";
 
-              const contents = properties.contents || properties;
-              const mode = properties.mode || "100644";
-              const type = properties.type || "blob";
+                const contents = properties.contents || properties;
+                const mode = properties.mode || "100644";
+                const type = properties.type || "blob";
 
-              if (!contents) {
-                return reject(`No file contents provided for ${fileName}`);
-              }
+                if (!contents) {
+                  return reject(`No file contents provided for ${fileName}`);
+                }
 
-              const fileSha = await createBlob(
-                octokit,
-                owner,
-                repo,
-                contents,
-                type,
-              );
+                const fileSha = await createBlob(
+                  octokit,
+                  owner,
+                  repo,
+                  contents,
+                  type,
+                );
 
-              treeItems.push({
-                path: fileName,
-                sha: fileSha,
-                mode: mode,
-                type: type,
-              });
-            }),
-          );
+                treeItems.push({
+                  path: fileName,
+                  sha: fileSha,
+                  mode: mode,
+                  type: type,
+                });
+              }),
+            );
+          }
         }
 
         // no need to issue further requests if there are no updates, creations and deletions
