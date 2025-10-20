@@ -1,1 +1,8 @@
 node_modules
+dist
+*.js
+*.d.ts
+*.d.ts.map
+*.js.map
+!jest.config.js
+!.eslintrc.js

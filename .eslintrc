@@ -1,4 +1,5 @@
 {
+    "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "ecmaVersion": 2020,
         "impliedStrict": true,
@@ -9,7 +10,8 @@
         }
     },
     "plugins": [
-        "prettier"
+        "prettier",
+        "@typescript-eslint"
     ],
     "rules": {
         "prettier/prettier": "error"
