@@ -1,44 +1,65 @@
-function isBase64(str: any): boolean {
+import { Octokit } from "@octokit/rest";
+import { RestEndpointMethodTypes } from "@octokit/plugin-rest-endpoint-methods";
+
+interface FileChange {
+  contents?: string | Buffer;
+  mode?: "100644" | "100755" | "040000" | "160000" | "120000";
+  type?: "blob" | "tree" | "commit";
+}
+
+interface Change {
+  message: string;
+  files?: Record<string, string | Buffer | FileChange>;
+  filesToDelete?: string[];
+  ignoreDeletionFailures?: boolean;
+}
+
+interface Options {
+  owner: string;
+  repo: string;
+  branch: string;
+  base?: string;
+  createBranch?: boolean;
+  committer?: RestEndpointMethodTypes["git"]["createCommit"]["parameters"]["committer"];
+  author?: RestEndpointMethodTypes["git"]["createCommit"]["parameters"]["author"];
+  changes: Change[];
+  batchSize?: number;
+  forkFromBaseBranch?: boolean;
+}
+
+interface CommitResult {
+  commits: Array<
+    RestEndpointMethodTypes["git"]["createCommit"]["response"]["data"]
+  >;
+}
+
+function isBase64(str: string | Buffer): boolean {
   // Handle buffer inputs
+  let strValue: string;
   if (Buffer.isBuffer(str)) {
-    str = str.toString("utf8");
+    strValue = str.toString("utf8");
+  } else {
+    strValue = str;
   }
 
   var notBase64 = /[^A-Z0-9+\/=]/i;
-  const isString = typeof str === "string" || str instanceof String;
 
-  if (!isString) {
-    let invalidType;
-    if (str === null) {
-      invalidType = "null";
-    } else {
-      invalidType = typeof str;
-      if (
-        invalidType === "object" &&
-        str.constructor &&
-        str.constructor.hasOwnProperty("name")
-      ) {
-        invalidType = str.constructor.name;
-      } else {
-        invalidType = `a ${invalidType}`;
-      }
-    }
-    throw new TypeError(`Expected string but received ${invalidType}.`);
-  }
-
-  const len = str.length;
-  if (!len || len % 4 !== 0 || notBase64.test(str)) {
+  const len = strValue.length;
+  if (!len || len % 4 !== 0 || notBase64.test(strValue)) {
     return false;
   }
-  const firstPaddingChar = str.indexOf("=");
+  const firstPaddingChar = strValue.indexOf("=");
   return (
     firstPaddingChar === -1 ||
     firstPaddingChar === len - 1 ||
-    (firstPaddingChar === len - 2 && str[len - 1] === "=")
+    (firstPaddingChar === len - 2 && strValue[len - 1] === "=")
   );
 }
 
-module.exports = function (octokit: any, opts: any) {
+module.exports = function (
+  octokit: Octokit,
+  opts: Options,
+): Promise<CommitResult> {
   return new Promise(async (resolve, reject) => {
     // Up front validation
     try {
@@ -110,7 +131,9 @@ module.exports = function (octokit: any, opts: any) {
       }
 
       // Create blobs
-      const commits = [];
+      const commits: Array<
+        RestEndpointMethodTypes["git"]["createCommit"]["response"]["data"]
+      > = [];
       for (const change of changes) {
         const message = change.message;
         if (!message) {
@@ -129,7 +152,9 @@ module.exports = function (octokit: any, opts: any) {
           );
         }
 
-        const treeItems = [];
+        const treeItems: Array<
+          RestEndpointMethodTypes["git"]["createTree"]["parameters"]["tree"][number]
+        > = [];
         // Handle file deletions
         if (hasFilesToDelete) {
           for (const batch of chunk(change.filesToDelete, batchSize)) {
@@ -171,9 +196,22 @@ module.exports = function (octokit: any, opts: any) {
               batch.map(async (fileName: string) => {
                 const properties = change.files[fileName] || "";
 
-                const contents = properties.contents || properties;
-                const mode = properties.mode || "100644";
-                const type = properties.type || "blob";
+                let contents: string | Buffer;
+                let mode: "100644" | "100755" | "040000" | "160000" | "120000";
+                let type: "blob" | "tree" | "commit";
+
+                if (
+                  typeof properties === "string" ||
+                  Buffer.isBuffer(properties)
+                ) {
+                  contents = properties;
+                  mode = "100644";
+                  type = "blob";
+                } else {
+                  contents = properties.contents || "";
+                  mode = properties.mode || "100644";
+                  type = properties.type || "blob";
+                }
 
                 if (!contents) {
                   return reject(`No file contents provided for ${fileName}`);
@@ -257,12 +295,12 @@ module.exports = function (octokit: any, opts: any) {
 };
 
 async function fileExistsInRepo(
-  octokit: any,
+  octokit: Octokit,
   owner: string,
   repo: string,
   path: string,
   branch: string,
-) {
+): Promise<boolean> {
   try {
     await octokit.rest.repos.getContent({
       method: "HEAD",
@@ -278,15 +316,15 @@ async function fileExistsInRepo(
 }
 
 async function createCommit(
-  octokit: any,
+  octokit: Octokit,
   owner: string,
   repo: string,
-  committer: any,
-  author: any,
+  committer: RestEndpointMethodTypes["git"]["createCommit"]["parameters"]["committer"],
+  author: RestEndpointMethodTypes["git"]["createCommit"]["parameters"]["author"],
   message: string,
-  tree: any,
+  tree: RestEndpointMethodTypes["git"]["createTree"]["response"]["data"],
   baseTree: string,
-) {
+): Promise<RestEndpointMethodTypes["git"]["createCommit"]["response"]["data"]> {
   return (
     await octokit.rest.git.createCommit({
       owner,
@@ -301,12 +339,14 @@ async function createCommit(
 }
 
 async function createTree(
-  octokit: any,
+  octokit: Octokit,
   owner: string,
   repo: string,
-  treeItems: any[],
+  treeItems: Array<
+    RestEndpointMethodTypes["git"]["createTree"]["parameters"]["tree"][number]
+  >,
   baseTree: string,
-) {
+): Promise<RestEndpointMethodTypes["git"]["createTree"]["response"]["data"]> {
   return (
     await octokit.rest.git.createTree({
       owner,
@@ -318,19 +358,23 @@ async function createTree(
 }
 
 async function createBlob(
-  octokit: any,
+  octokit: Octokit,
   owner: string,
   repo: string,
-  contents: any,
+  contents: string | Buffer,
   type: string,
-) {
+): Promise<string> {
   if (type === "commit") {
-    return contents;
+    // For submodules, contents is the commit SHA
+    return typeof contents === "string" ? contents : contents.toString();
   } else {
-    let content = contents;
+    let content: string;
 
-    if (!isBase64(content)) {
+    if (!isBase64(contents)) {
       content = Buffer.from(contents).toString("base64");
+    } else {
+      content =
+        typeof contents === "string" ? contents : contents.toString("base64");
     }
 
     const file = (
@@ -345,7 +389,12 @@ async function createBlob(
   }
 }
 
-async function loadRef(octokit: any, owner: string, repo: string, ref: string) {
+async function loadRef(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  ref: string,
+): Promise<string | undefined> {
   try {
     const x = await octokit.rest.git.getRef({
       owner,
@@ -358,8 +407,8 @@ async function loadRef(octokit: any, owner: string, repo: string, ref: string) {
   }
 }
 
-const chunk = (input: any[], size: number) => {
-  return input.reduce((arr, item, idx) => {
+const chunk = <T>(input: T[], size: number): T[][] => {
+  return input.reduce((arr: T[][], item: T, idx: number) => {
     return idx % size === 0
       ? [...arr, [item]]
       : [...arr.slice(0, -1), [...arr.slice(-1)[0], item]];
