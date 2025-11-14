@@ -4,6 +4,9 @@
   "description": "Octokit plugin to create/update multiple files at once",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "npm run build && jest",

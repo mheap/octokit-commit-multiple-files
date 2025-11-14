@@ -57,7 +57,7 @@ function isBase64(str: string | Buffer): boolean {
 }
 
 export default function (
-  octokit: Octokit,
+  octokit: Octokit | any,
   opts: Options,
 ): Promise<CommitResult> {
   return new Promise(async (resolve, reject) => {
@@ -295,7 +295,7 @@ export default function (
 }
 
 async function fileExistsInRepo(
-  octokit: Octokit,
+  octokit: Octokit | any,
   owner: string,
   repo: string,
   path: string,
@@ -316,7 +316,7 @@ async function fileExistsInRepo(
 }
 
 async function createCommit(
-  octokit: Octokit,
+  octokit: Octokit | any,
   owner: string,
   repo: string,
   committer: RestEndpointMethodTypes["git"]["createCommit"]["parameters"]["committer"],
@@ -339,7 +339,7 @@ async function createCommit(
 }
 
 async function createTree(
-  octokit: Octokit,
+  octokit: Octokit | any,
   owner: string,
   repo: string,
   treeItems: Array<
@@ -358,7 +358,7 @@ async function createTree(
 }
 
 async function createBlob(
-  octokit: Octokit,
+  octokit: Octokit | any,
   owner: string,
   repo: string,
   contents: string | Buffer,
@@ -390,7 +390,7 @@ async function createBlob(
 }
 
 async function loadRef(
-  octokit: Octokit,
+  octokit: Octokit | any,
   owner: string,
   repo: string,
   ref: string,
