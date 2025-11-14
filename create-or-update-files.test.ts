@@ -5,7 +5,7 @@ const nock = require("nock");
 nock.disableNetConnect();
 const octokit = new Octokit();
 
-function run(body) {
+function run(body: any) {
   return plugin(octokit, body);
 }
 
@@ -345,7 +345,7 @@ test(`success (createBranch, use default base branch)`, async () => {
 });
 
 test(`success (createBranch, use default base branch, multiple commits)`, async () => {
-  const body = {
+  const body: any = {
     ...validRequest,
     createBranch: true,
   };
@@ -510,7 +510,7 @@ test("Does not overwrite other methods", () => {
   expect(testOctokit).toHaveProperty("rest.repos.acceptInvitation");
 });
 
-function mockGetRef(branch, sha, success) {
+function mockGetRef(branch: string, sha: string, success: boolean) {
   const m = nock("https://api.github.com").get(
     `/repos/${owner}/${repo}/git/ref/heads%2F${branch}`,
   );
@@ -528,7 +528,7 @@ function mockGetRef(branch, sha, success) {
   }
 }
 
-function mockCreateBlob(content, sha) {
+function mockCreateBlob(content: string, sha: string) {
   const expectedBody = { content: content, encoding: "base64" };
   const m = nock("https://api.github.com").post(
     `/repos/${owner}/${repo}/git/blobs`,
@@ -575,7 +575,7 @@ function mockCreateBlobBase64PreEncoded() {
   );
 }
 
-function mockCreateTreeSubmodule(baseTree) {
+function mockCreateTreeSubmodule(baseTree: string) {
   const expectedBody = {
     tree: [
       {
@@ -600,7 +600,7 @@ function mockCreateTreeSubmodule(baseTree) {
   m.reply(200, body);
 }
 
-function mockCreateTree(baseTree) {
+function mockCreateTree(baseTree: string) {
   const expectedBody = {
     tree: [
       {
@@ -631,7 +631,7 @@ function mockCreateTree(baseTree) {
   m.reply(200, body);
 }
 
-function mockCreateTreeSecond(baseTree) {
+function mockCreateTreeSecond(baseTree: string) {
   const expectedBody = {
     tree: [
       {
@@ -656,7 +656,7 @@ function mockCreateTreeSecond(baseTree) {
   m.reply(200, body);
 }
 
-function mockCreateTreeWithIgnoredDelete(baseTree) {
+function mockCreateTreeWithIgnoredDelete(baseTree: string) {
   const expectedBody = {
     tree: [
       {
@@ -681,7 +681,7 @@ function mockCreateTreeWithIgnoredDelete(baseTree) {
   m.reply(200, body);
 }
 
-function mockCreateTreeWithDeleteOnly(baseTree) {
+function mockCreateTreeWithDeleteOnly(baseTree: string) {
   // The order here is important. Removals must be applied before creations
   const expectedBody = {
     tree: [
@@ -707,7 +707,7 @@ function mockCreateTreeWithDeleteOnly(baseTree) {
   m.reply(200, body);
 }
 
-function mockCreateTreeWithDelete(baseTree) {
+function mockCreateTreeWithDelete(baseTree: string) {
   // The order here is important. Removals must be applied before creations
   const expectedBody = {
     tree: [
@@ -739,7 +739,7 @@ function mockCreateTreeWithDelete(baseTree) {
   m.reply(200, body);
 }
 
-function mockCommitSubmodule(baseTree) {
+function mockCommitSubmodule(baseTree: string) {
   const expectedBody = {
     message: "Your submodule commit message",
     tree: "4112258c05f8ce2b0570f1bbb1a330c0f9595ff9",
@@ -758,7 +758,7 @@ function mockCommitSubmodule(baseTree) {
   m.reply(200, body);
 }
 
-function mockCommit(baseTree, additional) {
+function mockCommit(baseTree: string, additional?: any) {
   additional = additional || {};
 
   const expectedBody = {
@@ -780,7 +780,7 @@ function mockCommit(baseTree, additional) {
   m.reply(200, body);
 }
 
-function mockCommitSecond(baseTree) {
+function mockCommitSecond(baseTree: string) {
   const expectedBody = {
     message: "This is the second commit",
     tree: "fffff6bbf5ab983d31b1cca28e204b71ab722764",
@@ -799,7 +799,7 @@ function mockCommitSecond(baseTree) {
   m.reply(200, body);
 }
 
-function mockUpdateRef(branch) {
+function mockUpdateRef(branch: string) {
   const expectedBody = {
     force: true,
     sha: "ef105a72c03ce2743d90944c2977b1b5563b43c0",
@@ -813,7 +813,7 @@ function mockUpdateRef(branch) {
   m.reply(200);
 }
 
-function mockCreateRef(branch, sha) {
+function mockCreateRef(branch: string, sha?: string) {
   const expectedBody = {
     force: true,
     ref: `refs/heads/${branch}`,
@@ -828,7 +828,7 @@ function mockCreateRef(branch, sha) {
   m.reply(200);
 }
 
-function mockCreateRefSecond(branch, sha) {
+function mockCreateRefSecond(branch: string, sha?: string) {
   const expectedBody = {
     force: true,
     ref: `refs/heads/${branch}`,
@@ -843,9 +843,9 @@ function mockCreateRefSecond(branch, sha) {
   m.reply(200);
 }
 
-function mockGetRepo() {
+function mockGetRepo(defaultBranch?: string) {
   const body = {
-    default_branch: "master",
+    default_branch: defaultBranch || "master",
   };
 
   nock("https://api.github.com")
@@ -853,7 +853,7 @@ function mockGetRepo() {
     .reply(200, body);
 }
 
-function mockGetContents(fileName, branch, success) {
+function mockGetContents(fileName: string, branch: string, success: boolean) {
   const m = nock("https://api.github.com").head(
     `/repos/${owner}/${repo}/contents/${fileName}?ref=${branch}`,
   );
