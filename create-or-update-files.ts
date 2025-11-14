@@ -1,20 +1,20 @@
 import { Octokit } from "@octokit/rest";
 import { RestEndpointMethodTypes } from "@octokit/plugin-rest-endpoint-methods";
 
-interface FileChange {
+export interface FileChange {
   contents?: string | Buffer;
   mode?: "100644" | "100755" | "040000" | "160000" | "120000";
   type?: "blob" | "tree" | "commit";
 }
 
-interface Change {
+export interface Change {
   message: string;
   files?: Record<string, string | Buffer | FileChange>;
   filesToDelete?: string[];
   ignoreDeletionFailures?: boolean;
 }
 
-interface Options {
+export interface Options {
   owner: string;
   repo: string;
   branch: string;
@@ -27,7 +27,7 @@ interface Options {
   forkFromBaseBranch?: boolean;
 }
 
-interface CommitResult {
+export interface CommitResult {
   commits: Array<
     RestEndpointMethodTypes["git"]["createCommit"]["response"]["data"]
   >;
@@ -56,7 +56,7 @@ function isBase64(str: string | Buffer): boolean {
   );
 }
 
-export default function (
+const createOrUpdateFiles = function (
   octokit: Octokit | any,
   opts: Options,
 ): Promise<CommitResult> {
@@ -292,7 +292,7 @@ export default function (
       return reject(e);
     }
   });
-}
+};
 
 async function fileExistsInRepo(
   octokit: Octokit | any,
@@ -414,3 +414,5 @@ const chunk = <T>(input: T[], size: number): T[][] => {
       : [...arr.slice(0, -1), [...arr.slice(-1)[0], item]];
   }, []);
 };
+
+export { createOrUpdateFiles };

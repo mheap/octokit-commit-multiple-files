@@ -17,10 +17,18 @@ If the `branch` provided does not exist, the plugin will error. To automatically
 In addition, it accepts `changes` which is an array of objects containing a `message` and a `files` object
 
 ```javascript
-let { Octokit } = require("@octokit/rest");
-Octokit = Octokit.plugin(require("octokit-commit-multiple-files"));
+import { Octokit } from "@octokit/rest";
+import { CreateOrUpdateFiles } from "octokit-commit-multiple-files";
 
-const octokit = new Octokit();
+const OctokitWithPlugin = Octokit.plugin(CreateOrUpdateFiles);
+
+const octokit = new OctokitWithPlugin();
+
+// Define your repository details
+const owner = "your-username";
+const repo = "your-repo";
+const branch = "main";
+const createBranch = false;
 
 const commits = await octokit.createOrUpdateFiles({
   owner,
@@ -71,7 +79,7 @@ const commits = await octokit.createOrUpdateFiles({
 By default the plugin will append commits to an existing branch. If you want to reset the branch to the state of `base` before adding any changes, set `forkFromBaseBranch: true`:
 
 ```javascript
-const commits = await octokit.rest.repos.createOrUpdateFiles({
+const commits = await octokit.createOrUpdateFiles({
   owner,
   repo,
   branch,
