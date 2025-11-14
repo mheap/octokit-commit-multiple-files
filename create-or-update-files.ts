@@ -56,7 +56,7 @@ function isBase64(str: string | Buffer): boolean {
   );
 }
 
-module.exports = function (
+export default function (
   octokit: Octokit,
   opts: Options,
 ): Promise<CommitResult> {
@@ -292,7 +292,7 @@ module.exports = function (
       return reject(e);
     }
   });
-};
+}
 
 async function fileExistsInRepo(
   octokit: Octokit,
