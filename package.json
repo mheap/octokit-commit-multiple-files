@@ -1,6 +1,6 @@
 {
   "name": "octokit-commit-multiple-files",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Octokit plugin to create/update multiple files at once",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
