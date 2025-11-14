@@ -1,5 +1,5 @@
-import CreateOrUpdateMultipleFiles from ".";
-import CreateOrUpdateMultipleFilesHandler from "./create-or-update-files";
+import { CreateOrUpdateFiles } from ".";
+import { createOrUpdateFiles } from "./create-or-update-files";
 const { Octokit } = require("@octokit/rest");
 
 const nock = require("nock");
@@ -7,7 +7,7 @@ nock.disableNetConnect();
 const octokit = new Octokit();
 
 function run(body: any) {
-  return CreateOrUpdateMultipleFilesHandler(octokit, body);
+  return createOrUpdateFiles(octokit, body);
 }
 
 type RequestStructure = {
@@ -512,13 +512,13 @@ test("failure (fileToDelete is missing)", async () => {
 });
 
 test("Loads plugin", () => {
-  const TestOctokit = Octokit.plugin(CreateOrUpdateMultipleFiles);
+  const TestOctokit = Octokit.plugin(CreateOrUpdateFiles);
   const testOctokit = new TestOctokit();
   expect(testOctokit).toHaveProperty("createOrUpdateFiles");
 });
 
 test("Does not overwrite other methods", () => {
-  const TestOctokit = Octokit.plugin(CreateOrUpdateMultipleFiles);
+  const TestOctokit = Octokit.plugin(CreateOrUpdateFiles);
   const testOctokit = new TestOctokit();
   expect(testOctokit).toHaveProperty("rest.repos.acceptInvitation");
 });

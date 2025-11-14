@@ -4,6 +4,14 @@
   "description": "Octokit plugin to create/update multiple files at once",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],
