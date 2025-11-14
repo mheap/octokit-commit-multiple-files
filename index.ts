@@ -1,9 +1,9 @@
 import { Octokit } from "@octokit/rest";
 
-const createOrUpdateFilesPlugin = require("./create-or-update-files");
+import createOrUpdateFilesPlugin from "./create-or-update-files";
 
-module.exports = function (octokit: Octokit) {
+export default function (octokit: Octokit) {
   return {
     createOrUpdateFiles: createOrUpdateFilesPlugin.bind(null, octokit),
   };
-};
+}

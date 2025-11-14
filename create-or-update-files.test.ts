@@ -1,4 +1,5 @@
-const plugin = require("./create-or-update-files");
+import CreateOrUpdateMultipleFiles from ".";
+import CreateOrUpdateMultipleFilesHandler from "./create-or-update-files";
 const { Octokit } = require("@octokit/rest");
 
 const nock = require("nock");
@@ -6,10 +7,22 @@ nock.disableNetConnect();
 const octokit = new Octokit();
 
 function run(body: any) {
-  return plugin(octokit, body);
+  return CreateOrUpdateMultipleFilesHandler(octokit, body);
 }
 
-const validRequest = {
+type RequestStructure = {
+  owner: string;
+  repo: string;
+  branch: string;
+  createBranch: boolean;
+  base?: string; // Marked as optional
+  changes?: Array<{
+    message: string;
+    files: Record<string, string | { contents: string }>;
+  }>;
+};
+
+const validRequest: RequestStructure = {
   owner: "mheap",
   repo: "test-repo",
   branch: "new-branch-name",
@@ -43,8 +56,8 @@ const mockSubmoduleCommitList = {
 };
 
 for (let req of ["owner", "repo", "branch"]) {
-  const body = { ...validRequest };
-  delete body[req];
+  const body: RequestStructure = { ...validRequest };
+  delete body[req as keyof RequestStructure];
   test(`missing parameter (${req})`, () => {
     expect(run(body)).rejects.toEqual(`'${req}' is a required parameter`);
   });
@@ -499,18 +512,18 @@ test("failure (fileToDelete is missing)", async () => {
 });
 
 test("Loads plugin", () => {
-  const TestOctokit = Octokit.plugin(require("."));
+  const TestOctokit = Octokit.plugin(CreateOrUpdateMultipleFiles);
   const testOctokit = new TestOctokit();
   expect(testOctokit).toHaveProperty("createOrUpdateFiles");
 });
 
 test("Does not overwrite other methods", () => {
-  const TestOctokit = Octokit.plugin(require("."));
+  const TestOctokit = Octokit.plugin(CreateOrUpdateMultipleFiles);
   const testOctokit = new TestOctokit();
   expect(testOctokit).toHaveProperty("rest.repos.acceptInvitation");
 });
 
-function mockGetRef(branch: string, sha: string, success: boolean) {
+function mockGetRef(branch: string | undefined, sha: string, success: boolean) {
   const m = nock("https://api.github.com").get(
     `/repos/${owner}/${repo}/git/ref/heads%2F${branch}`,
   );
